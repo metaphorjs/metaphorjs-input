@@ -1,0 +1,32 @@
+{
+    "standalone": {
+        "wrap": true,
+        "global": true,
+        "target": "dist/metaphorjs.input.js",
+        "files": [
+            "../metaphorjs/src/MetaphorJs.js",
+            ["src/metaphorjs.input.js", {"as": "Input"}]
+        ],
+        "expose": [["MetaphorJs.lib", "Input"]]
+    },
+
+    "amd": {
+        "target": "dist/metaphorjs.input.amd.js",
+        "files": [
+            ["src/metaphorjs.input.js", {"returnExports": true}]
+        ],
+        "define": {
+            "name": "metaphorjs-input"
+        }
+    },
+
+    "compile-standalone": {
+        "target": "dist/metaphorjs.input.min.js",
+        "compile": "standalone"
+    },
+
+    "compile-amd": {
+        "target": "dist/metaphorjs.input.amd.min.js",
+        "compile": "amd"
+    }
+}
