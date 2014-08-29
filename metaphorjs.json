@@ -10,6 +10,13 @@
         "expose": [["MetaphorJs.lib", "Input"]]
     },
 
+    "npm": {
+        "target": "dist/metaphorjs.input.npm.js",
+        "files": [
+            ["src/metaphorjs.input.js", {"keepExports": true}]
+        ]
+    },
+
     "amd": {
         "target": "dist/metaphorjs.input.amd.js",
         "files": [
