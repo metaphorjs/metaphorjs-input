@@ -1,39 +1,54 @@
 {
-    "standalone": {
-        "wrap": true,
-        "global": true,
-        "target": "dist/metaphorjs.input.js",
-        "files": [
-            "../metaphorjs/src/MetaphorJs.js",
-            ["src/metaphorjs.input.js", {"as": "Input"}]
-        ],
-        "expose": [["MetaphorJs.lib", "Input"]]
-    },
-
-    "npm": {
-        "target": "dist/metaphorjs.input.npm.js",
-        "files": [
-            ["src/metaphorjs.input.js", {"keepExports": true}]
-        ]
-    },
-
-    "amd": {
-        "target": "dist/metaphorjs.input.amd.js",
-        "files": [
-            ["src/metaphorjs.input.js", {"returnExports": true}]
-        ],
-        "define": {
-            "name": "metaphorjs-input"
+    "version": "0.1.1",
+    "push": [
+        "github"
+    ],
+    "build": {
+        "standalone": {
+            "wrap": true,
+            "global": true,
+            "target": "dist/metaphorjs.input.js",
+            "files": [
+                "../metaphorjs/src/MetaphorJs.js",
+                [
+                    "src/metaphorjs.input.js",
+                    {
+                        "as": "Input"
+                    }
+                ]
+            ],
+            "expose": [
+                [
+                    "MetaphorJs.lib",
+                    "Input"
+                ]
+            ]
+        },
+        "npm": {
+            "target": "dist/metaphorjs.input.npm.js",
+            "compile": false,
+            "files": [
+                [
+                    "src/metaphorjs.input.js",
+                    {
+                        "keepExports": true
+                    }
+                ]
+            ]
+        },
+        "amd": {
+            "target": "dist/metaphorjs.input.amd.js",
+            "files": [
+                [
+                    "src/metaphorjs.input.js",
+                    {
+                        "returnExports": true
+                    }
+                ]
+            ],
+            "define": {
+                "name": "metaphorjs-input"
+            }
         }
-    },
-
-    "compile-standalone": {
-        "target": "dist/metaphorjs.input.min.js",
-        "compile": "standalone"
-    },
-
-    "compile-amd": {
-        "target": "dist/metaphorjs.input.amd.min.js",
-        "compile": "amd"
     }
 }

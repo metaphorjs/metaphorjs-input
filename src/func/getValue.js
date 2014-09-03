@@ -1,8 +1,8 @@
 
 var isNull = require("../../../metaphorjs/src/func/isNull.js"),
-    isUndefined = require("../../../metaphorjs/src/func/isUndefined.js"),
     isString = require("../../../metaphorjs/src/func/isString.js"),
-    trim = require("../../../metaphorjs/src/func/trim.js");
+    trim = require("../../../metaphorjs/src/func/trim.js"),
+    undf = require("../../../metaphorjs/src/var/undf.js");
 
 /**
  * @param {Element} elem
@@ -17,7 +17,7 @@ module.exports = function(){
         option: function(elem) {
             var val = elem.getAttribute("value") || elem.value;
 
-            return !isNull(val) && !isUndefined(val) ?
+            return val != undf ?
                    val :
                    trim( elem.innerText || elem.textContent );
         },
@@ -75,7 +75,7 @@ module.exports = function(){
 
         hook = hooks[elem.type] || hooks[elem.nodeName.toLowerCase()];
 
-        if (hook && !isUndefined((ret = hook(elem, "value")))) {
+        if (hook && (ret = hook(elem, "value")) !== undf) {
             return ret;
         }
 

@@ -4,7 +4,7 @@ var getValue    = require("./getValue.js"),
     inArray     = require("../../../metaphorjs/src/func/array/inArray.js"),
     isArray     = require("../../../metaphorjs/src/func/isArray.js"),
     isNumber    = require("../../../metaphorjs/src/func/isNumber.js"),
-    isUndefined = require("../../../metaphorjs/src/func/isUndefined.js"),
+    undf        = require("../../../metaphorjs/src/var/undf.js"),
     isNull      = require("../../../metaphorjs/src/func/isNull.js");
 
 /**
@@ -66,7 +66,7 @@ module.exports = function() {
         var hook = hooks[el.type] || hooks[el.nodeName.toLowerCase()];
 
         // If set returns undefined, fall back to normal setting
-        if (!hook || isUndefined(hook(el, val, "value"))) {
+        if (!hook || hook(el, val, "value") === undf) {
             el.value = val;
         }
     };

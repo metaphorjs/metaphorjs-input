@@ -40,15 +40,68 @@ var removeListener = function(el, event, func) {
 var isNull = function(value) {
     return value === null;
 };
-var strUndef = "undefined";
+var toString = Object.prototype.toString;
+var undf = undefined;
 
 
-var isUndefined = function(any) {
-    return typeof any == strUndef;
-};
+
+var varType = function(){
+
+    var types = {
+        '[object String]': 0,
+        '[object Number]': 1,
+        '[object Boolean]': 2,
+        '[object Object]': 3,
+        '[object Function]': 4,
+        '[object Array]': 5,
+        '[object RegExp]': 9,
+        '[object Date]': 10
+    };
+
+
+    /**
+        'string': 0,
+        'number': 1,
+        'boolean': 2,
+        'object': 3,
+        'function': 4,
+        'array': 5,
+        'null': 6,
+        'undefined': 7,
+        'NaN': 8,
+        'regexp': 9,
+        'date': 10
+    */
+
+    return function(val) {
+
+        if (!val) {
+            if (val === null) {
+                return 6;
+            }
+            if (val === undf) {
+                return 7;
+            }
+        }
+
+        var num = types[toString.call(val)];
+
+        if (num === undf) {
+            return -1;
+        }
+
+        if (num == 1 && isNaN(val)) {
+            num = 8;
+        }
+
+        return num;
+    };
+
+}();
+
 
 var isString = function(value) {
-    return typeof value == "string";
+    return varType(value) === 0;
 };
 
 
@@ -82,7 +135,7 @@ var getValue = function(){
         option: function(elem) {
             var val = elem.getAttribute("value") || elem.value;
 
-            return !isNull(val) && !isUndefined(val) ?
+            return val != undf ?
                    val :
                    trim( elem.innerText || elem.textContent );
         },
@@ -140,7 +193,7 @@ var getValue = function(){
 
         hook = hooks[elem.type] || hooks[elem.nodeName.toLowerCase()];
 
-        if (hook && !isUndefined((ret = hook(elem, "value")))) {
+        if (hook && (ret = hook(elem, "value")) !== undf) {
             return ret;
         }
 
@@ -161,7 +214,7 @@ var getValue = function(){
  * @returns {[]}
  */
 var toArray = function(list) {
-    if (list && !isUndefined(list.length) && !isString(list)) {
+    if (list && !list.length != undf && !isString(list)) {
         for(var a = [], i =- 1, l = list.length>>>0; ++i !== l; a[i] = list[i]){}
         return a;
     }
@@ -250,13 +303,6 @@ if (!aIndexOf) {
 var inArray = function(val, arr) {
     return arr ? (aIndexOf.call(arr, val) != -1) : false;
 };
-var toString = Object.prototype.toString;
-var isObject = function(value) {
-    return value != null && typeof value === 'object';
-};
-var isNumber = function(value) {
-    return typeof value == "number" && !isNaN(value);
-};
 
 
 /**
@@ -264,8 +310,12 @@ var isNumber = function(value) {
  * @returns {boolean}
  */
 var isArray = function(value) {
-    return !!(value && isObject(value) && isNumber(value.length) &&
-                toString.call(value) == '[object Array]' || false);
+    return varType(value) === 5;
+};
+
+
+var isNumber = function(value) {
+    return varType(value) === 1;
 };
 
 
@@ -328,7 +378,7 @@ var setValue = function() {
         var hook = hooks[el.type] || hooks[el.nodeName.toLowerCase()];
 
         // If set returns undefined, fall back to normal setting
-        if (!hook || isUndefined(hook(el, val, "value"))) {
+        if (!hook || hook(el, val, "value") === undf) {
             el.value = val;
         }
     };
@@ -382,7 +432,7 @@ var browserHasEvent = function(){
         // it. In particular the event is not fired when backspace or delete key are pressed or
         // when cut operation is performed.
 
-        if (eventSupport[event] === undefined) {
+        if (eventSupport[event] === undf) {
 
             if (event == 'input' && isIE() == 9) {
                 return eventSupport[event] = false;
