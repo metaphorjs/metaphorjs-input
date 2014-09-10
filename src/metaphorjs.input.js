@@ -229,7 +229,9 @@ Input.prototype = {
         var self    = this,
             val     = self.getValue();
 
-        self.cb.call(self.cbContext, val);
+        if (self.cb) {
+            self.cb.call(self.cbContext, val);
+        }
     },
 
     onCheckboxInputChange: function() {
@@ -237,7 +239,9 @@ Input.prototype = {
         var self    = this,
             node    = self.el;
 
-        self.cb.call(self.cbContext, node.checked ? (node.getAttribute("value") || true) : false);
+        if (self.cb) {
+            self.cb.call(self.cbContext, node.checked ? (node.getAttribute("value") || true) : false);
+        }
     },
 
     onRadioInputChange: function(e) {
@@ -247,7 +251,9 @@ Input.prototype = {
         var self    = this,
             trg     = e.target || e.srcElement;
 
-        self.cb.call(self.cbContext, trg.value);
+        if (self.cb) {
+            self.cb.call(self.cbContext, trg.value);
+        }
     },
 
     setValue: function(val) {
@@ -262,10 +268,7 @@ Input.prototype = {
             radio = self.radio;
 
             for (i = 0, len = radio.length; i < len; i++) {
-                if (radio[i].value == val) {
-                    radio[i].checked = true;
-                    break;
-                }
+                radio[i].checked = radio[i].value == val;
             }
         }
         else if (type == "checkbox") {

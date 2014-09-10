@@ -20,22 +20,29 @@ module.exports = function() {
                 options     = elem.options,
                 values      = toArray(value),
                 i           = options.length,
+                selected,
                 setIndex    = -1;
 
             while ( i-- ) {
-                option = options[i];
+                option      = options[i];
+                selected    = inArray(option.value, values);
 
-                if ((option.selected = inArray(option.value, values))) {
+                //if ((option.selected = inArray(option.value, values))) {
+                if (selected) {
+                    option.setAttribute("selected", "selected");
                     optionSet = true;
                 }
-                else if (!isNull(option.getAttribute("mjs-default-option"))) {
+                else {
+                    option.removeAttribute("selected");
+                }
+
+                if (!selected && !isNull(option.getAttribute("mjs-default-option"))) {
                     setIndex = i;
                 }
             }
 
             // Force browsers to behave consistently when non-matching value is set
-            if ( !optionSet ) {
-
+            if (!optionSet) {
                 elem.selectedIndex = setIndex;
             }
             return values;

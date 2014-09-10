@@ -91,7 +91,7 @@ var varType = function(){
         }
 
         if (num == 1 && isNaN(val)) {
-            num = 8;
+            return 8;
         }
 
         return num;
@@ -101,7 +101,7 @@ var varType = function(){
 
 
 var isString = function(value) {
-    return varType(value) === 0;
+    return typeof value == "string" || varType(value) === 0;
 };
 
 
@@ -310,7 +310,7 @@ var inArray = function(val, arr) {
  * @returns {boolean}
  */
 var isArray = function(value) {
-    return varType(value) === 5;
+    return typeof value == "object" && varType(value) === 5;
 };
 
 
@@ -332,22 +332,29 @@ var setValue = function() {
                 options     = elem.options,
                 values      = toArray(value),
                 i           = options.length,
+                selected,
                 setIndex    = -1;
 
             while ( i-- ) {
-                option = options[i];
+                option      = options[i];
+                selected    = inArray(option.value, values);
 
-                if ((option.selected = inArray(option.value, values))) {
+                //if ((option.selected = inArray(option.value, values))) {
+                if (selected) {
+                    option.setAttribute("selected", "selected");
                     optionSet = true;
                 }
-                else if (!isNull(option.getAttribute("mjs-default-option"))) {
+                else {
+                    option.removeAttribute("selected");
+                }
+
+                if (!selected && !isNull(option.getAttribute("mjs-default-option"))) {
                     setIndex = i;
                 }
             }
 
             // Force browsers to behave consistently when non-matching value is set
-            if ( !optionSet ) {
-
+            if (!optionSet) {
                 elem.selectedIndex = setIndex;
             }
             return values;
@@ -668,7 +675,9 @@ Input.prototype = {
         var self    = this,
             val     = self.getValue();
 
-        self.cb.call(self.cbContext, val);
+        if (self.cb) {
+            self.cb.call(self.cbContext, val);
+        }
     },
 
     onCheckboxInputChange: function() {
@@ -676,7 +685,9 @@ Input.prototype = {
         var self    = this,
             node    = self.el;
 
-        self.cb.call(self.cbContext, node.checked ? (node.getAttribute("value") || true) : false);
+        if (self.cb) {
+            self.cb.call(self.cbContext, node.checked ? (node.getAttribute("value") || true) : false);
+        }
     },
 
     onRadioInputChange: function(e) {
@@ -686,7 +697,9 @@ Input.prototype = {
         var self    = this,
             trg     = e.target || e.srcElement;
 
-        self.cb.call(self.cbContext, trg.value);
+        if (self.cb) {
+            self.cb.call(self.cbContext, trg.value);
+        }
     },
 
     setValue: function(val) {
@@ -701,10 +714,7 @@ Input.prototype = {
             radio = self.radio;
 
             for (i = 0, len = radio.length; i < len; i++) {
-                if (radio[i].value == val) {
-                    radio[i].checked = true;
-                    break;
-                }
+                radio[i].checked = radio[i].value == val;
             }
         }
         else if (type == "checkbox") {
