@@ -454,6 +454,22 @@ var browserHasEvent = function(){
 }();
 
 
+var attr = function(el, name, value) {
+    if (!el || !el.getAttribute) {
+        return null;
+    }
+    if (value === undf) {
+        return el.getAttribute(name);
+    }
+    else if (value === null) {
+        return el.removeAttribute(name);
+    }
+    else {
+        return el.setAttribute(name, value);
+    }
+};
+
+
 
 var Input = function(el, changeFn, changeFnContext, submitFn) {
 
@@ -464,7 +480,7 @@ var Input = function(el, changeFn, changeFnContext, submitFn) {
     self.cb             = changeFn;
     self.scb            = submitFn;
     self.cbContext      = changeFnContext;
-    self.inputType      = type = (el.getAttribute("mjs-input-type") || el.type.toLowerCase());
+    self.inputType      = type = (attr(el, "mjs-input-type") || el.type.toLowerCase());
     self.listeners      = [];
     self.submittable    = isSubmittable(el);
 
@@ -686,7 +702,7 @@ Input.prototype = {
             node    = self.el;
 
         if (self.cb) {
-            self.cb.call(self.cbContext, node.checked ? (node.getAttribute("value") || true) : false);
+            self.cb.call(self.cbContext, node.checked ? (attr(node, "value") || true) : false);
         }
     },
 
@@ -743,7 +759,7 @@ Input.prototype = {
             return null;
         }
         else if (type == "checkbox") {
-            return self.el.checked ? (self.el.getAttribute("value") || true) : false;
+            return self.el.checked ? (attr(self.el, "value") || true) : false;
         }
         else {
             return self.processValue(getValue(self.el));
