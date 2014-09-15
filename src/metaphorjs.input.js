@@ -7,7 +7,8 @@ var bind    = require("../../metaphorjs/src/func/bind.js"),
     isSubmittable = require("../../metaphorjs/src/func/dom/isSubmittable.js"),
     isAndroid = require("../../metaphorjs/src/func/browser/isAndroid.js"),
     browserHasEvent = require("../../metaphorjs/src/func/browser/browserHasEvent.js"),
-    attr = require("../../metaphorjs/src/func/dom/attr.js");
+    getAttr = require("../../metaphorjs/src/func/dom/getAttr.js"),
+    select = require("../../metaphorjs-select/src/metaphorjs.select.js");
 
 
 var Input = function(el, changeFn, changeFnContext, submitFn) {
@@ -19,7 +20,7 @@ var Input = function(el, changeFn, changeFnContext, submitFn) {
     self.cb             = changeFn;
     self.scb            = submitFn;
     self.cbContext      = changeFnContext;
-    self.inputType      = type = (attr(el, "mjs-input-type") || el.type.toLowerCase());
+    self.inputType      = type = (getAttr(el, "mjs-input-type") || el.type.toLowerCase());
     self.listeners      = [];
     self.submittable    = isSubmittable(el);
 
@@ -76,30 +77,14 @@ Input.prototype = {
 
         var self    = this,
             el      = self.el,
-            type    = el.type,
             name    = el.name,
             radio,
             i, len;
 
+
+        self.radio  = radio = select("input[name="+name+"]");
+
         self.onRadioInputChangeDelegate = bind(self.onRadioInputChange, self);
-
-        if (document.querySelectorAll) {
-            radio = document.querySelectorAll("input[name="+name+"]");
-        }
-        else {
-            var nodes = document.getElementsByTagName("input"),
-                node;
-
-            radio = [];
-            for (i = 0, len = nodes.length; i < len; i++) {
-                node = nodes[i];
-                if (node.type == type && node.name == name) {
-                    radio.push(node);
-                }
-            }
-        }
-
-        self.radio  = radio;
         self.listeners.push(["click", self.onRadioInputChangeDelegate]);
 
         for (i = 0, len = radio.length; i < len; i++) {
@@ -241,7 +226,7 @@ Input.prototype = {
             node    = self.el;
 
         if (self.cb) {
-            self.cb.call(self.cbContext, node.checked ? (attr(node, "value") || true) : false);
+            self.cb.call(self.cbContext, node.checked ? (getAttr(node, "value") || true) : false);
         }
     },
 
@@ -298,7 +283,7 @@ Input.prototype = {
             return null;
         }
         else if (type == "checkbox") {
-            return self.el.checked ? (attr(self.el, "value") || true) : false;
+            return self.el.checked ? (getAttr(self.el, "value") || true) : false;
         }
         else {
             return self.processValue(getValue(self.el));
