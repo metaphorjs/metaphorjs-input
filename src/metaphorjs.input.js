@@ -8,19 +8,21 @@ var bind    = require("../../metaphorjs/src/func/bind.js"),
     isAndroid = require("../../metaphorjs/src/func/browser/isAndroid.js"),
     browserHasEvent = require("../../metaphorjs/src/func/browser/browserHasEvent.js"),
     getAttr = require("../../metaphorjs/src/func/dom/getAttr.js"),
-    select = require("../../metaphorjs-select/src/metaphorjs.select.js");
+    select = require("../../metaphorjs-select/src/metaphorjs.select.js"),
+    getNodeConfig = require("../../metaphorjs/src/func/dom/getNodeConfig.js");
 
 
 var Input = function(el, changeFn, changeFnContext, submitFn) {
 
     var self    = this,
+        cfg     = getNodeConfig(el),
         type;
 
     self.el             = el;
     self.cb             = changeFn;
     self.scb            = submitFn;
     self.cbContext      = changeFnContext;
-    self.inputType      = type = (getAttr(el, "mjs-input-type") || el.type.toLowerCase());
+    self.inputType      = type = (cfg.type || el.type.toLowerCase());
     self.listeners      = [];
     self.submittable    = isSubmittable(el);
 

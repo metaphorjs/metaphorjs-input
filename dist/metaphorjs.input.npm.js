@@ -1039,18 +1039,347 @@ var select = function() {
     return select;
 }();
 
+/**
+ * @returns {String}
+ */
+var nextUid = function(){
+    var uid = ['0', '0', '0'];
+
+    // from AngularJs
+    return function() {
+        var index = uid.length;
+        var digit;
+
+        while(index) {
+            index--;
+            digit = uid[index].charCodeAt(0);
+            if (digit == 57 /*'9'*/) {
+                uid[index] = 'A';
+                return uid.join('');
+            }
+            if (digit == 90  /*'Z'*/) {
+                uid[index] = '0';
+            } else {
+                uid[index] = String.fromCharCode(digit + 1);
+                return uid.join('');
+            }
+        }
+        uid.unshift('0');
+        return uid.join('');
+    };
+}();
+
+
+
+
+var data = function(){
+
+    var dataCache   = {},
+
+        getNodeId   = function(el) {
+            return el._mjsid || (el._mjsid = nextUid());
+        };
+
+    /**
+     * @param {Element} el
+     * @param {String} key
+     * @param {*} value optional
+     */
+    return function(el, key, value) {
+        var id  = getNodeId(el),
+            obj = dataCache[id];
+
+        if (value !== undf) {
+            if (!obj) {
+                obj = dataCache[id] = {};
+            }
+            obj[key] = value;
+            return value;
+        }
+        else {
+            return obj ? obj[key] : undf;
+        }
+    };
+
+}();
+var removeAttr = function(el, name) {
+    return el.removeAttribute(name);
+};/**
+ * @param {Function} fn
+ * @param {Object} context
+ * @param {[]} args
+ * @param {number} timeout
+ */
+var async = function(fn, context, args, timeout) {
+    setTimeout(function(){
+        fn.apply(context, args || []);
+    }, timeout || 0);
+};
+var strUndef = "undefined";
+
+
+var error = function(e) {
+
+    var stack = e.stack || (new Error).stack;
+
+    if (typeof console != strUndef && console.log) {
+        async(function(){
+            console.log(e);
+            if (stack) {
+                console.log(stack);
+            }
+        });
+    }
+    else {
+        throw e;
+    }
+};
+
+var emptyFn = function(){};
+
+var slice = Array.prototype.slice;
+
+
+var functionFactory = function() {
+
+    var REG_REPLACE_EXPR    = /(^|[^a-z0-9_$])(\.)([^0-9])/ig,
+
+        f               = Function,
+        fnBodyStart     = 'try {',
+        getterBodyEnd   = ';} catch (thrownError) { return $$interceptor(thrownError, $$itself, ____); }',
+        setterBodyEnd   = ';} catch (thrownError) { return $$interceptor(thrownError, $$itself, ____, $$$$); }',
+
+
+        interceptor     = function(thrownError, func, scope, value) {
+
+            while (scope && !scope.$isRoot) {
+
+                scope = scope.$parent;
+
+                if (scope) {
+
+                    try {
+                        if (arguments.length == 4) {
+                            return func.call(null, scope, value, emptyFn, func);
+                        }
+                        else {
+                            return func.call(null, scope, emptyFn, func);
+                        }
+                    }
+                    catch (newError) {}
+                }
+            }
+
+            if (thrownError !== null) {
+                error(thrownError);
+            }
+
+            return undf;
+        },
+
+        isFailed        = function(val) {
+            return val === undf || (typeof val == "number" && isNaN(val));
+        },
+
+        wrapFunc        = function(func, returnsValue) {
+            return function() {
+                var args = slice.call(arguments),
+                    val;
+
+                args.push(interceptor);
+                args.push(func);
+
+                val = func.apply(null, args);
+
+                if (returnsValue && isFailed(val)) {//) {
+                    args = slice.call(arguments);
+                    args.unshift(func);
+                    args.unshift(null);
+                    return interceptor.apply(null, args);
+                }
+                else {
+                    return val;
+                }
+            };
+        },
+
+        getterCache     = {},
+        getterCacheCnt  = 0,
+
+        createGetter    = function createGetter(expr) {
+            try {
+                if (!getterCache[expr]) {
+                    getterCacheCnt++;
+                    return getterCache[expr] = wrapFunc(new f(
+                        '____',
+                        '$$interceptor',
+                        '$$itself',
+                        "".concat(fnBodyStart, 'return ', expr.replace(REG_REPLACE_EXPR, '$1____.$3'), getterBodyEnd)
+                    ), true);
+                }
+                return getterCache[expr];
+            }
+            catch (thrownError){
+                error(thrownError);
+                return emptyFn;
+            }
+        },
+
+        setterCache     = {},
+        setterCacheCnt  = 0,
+
+        createSetter    = function createSetter(expr) {
+            try {
+                if (!setterCache[expr]) {
+                    setterCacheCnt++;
+                    var code = expr.replace(REG_REPLACE_EXPR, '$1____.$3');
+                    return setterCache[expr] = wrapFunc(new f(
+                        '____',
+                        '$$$$',
+                        '$$interceptor',
+                        '$$itself',
+                        "".concat(fnBodyStart, code, ' = $$$$', setterBodyEnd)
+                    ));
+                }
+                return setterCache[expr];
+            }
+            catch (thrownError) {
+                error(thrownError);
+                return emptyFn;
+            }
+        },
+
+        funcCache       = {},
+        funcCacheCnt    = 0,
+
+        createFunc      = function createFunc(expr) {
+            try {
+                if (!funcCache[expr]) {
+                    funcCacheCnt++;
+                    return funcCache[expr] = wrapFunc(new f(
+                        '____',
+                        '$$interceptor',
+                        '$$itself',
+                        "".concat(fnBodyStart, expr.replace(REG_REPLACE_EXPR, '$1____.$3'), getterBodyEnd)
+                    ));
+                }
+                return funcCache[expr];
+            }
+            catch (thrownError) {
+                error(thrownError);
+                return emptyFn;
+            }
+        },
+
+        resetCache = function() {
+            getterCacheCnt >= 1000 && (getterCache = {});
+            setterCacheCnt >= 1000 && (setterCache = {});
+            funcCacheCnt >= 1000 && (funcCache = {});
+        };
+
+    return {
+        createGetter: createGetter,
+        createSetter: createSetter,
+        createFunc: createFunc,
+        resetCache: resetCache,
+        enableResetCacheInterval: function() {
+            setTimeout(resetCache, 10000);
+        }
+    };
+}();
+
+
+var createGetter = functionFactory.createGetter;
+var rToCamelCase = /-./g;
+
+var toCamelCase = function(str) {
+    return str.replace(rToCamelCase, function(match){
+        return match.charAt(1).toUpperCase();
+    });
+};
+
+
+var getNodeData = function() {
+
+    var readDataSet = function(node) {
+        var attrs = node.attributes,
+            dataset = {},
+            i, l;
+
+        for (i = 0, l = attrs.length; i < l; i++) {
+            dataset[toCamelCase(attrs[i].name)] = attrs[i].value;
+        }
+
+        return dataset;
+    };
+
+    if (document.documentElement.dataset) {
+        return function(node) {
+            return node.dataset;
+        };
+    }
+    else {
+        return function(node) {
+
+            var dataset;
+
+            if ((dataset = data(node, "data")) !== undf) {
+                return dataset;
+            }
+
+            dataset = readDataSet(node);
+            data(node, "data", dataset);
+            return dataset;
+        };
+    }
+
+}();
+
+
+var getNodeConfig = function(node, scope, expr) {
+
+    var cfg = data(node, "config"),
+        config, dataset, i, val;
+
+    if (cfg) {
+        return cfg;
+    }
+
+    cfg = {};
+
+    if (expr || (expr = getAttr(node, "mjs-config")) !== null) {
+        removeAttr(node, "mjs-config");
+        config = expr ? createGetter(expr)(scope || {}) : {};
+        for (i in config){
+            cfg[i] = config[i];
+        }
+    }
+
+    dataset = getNodeData(node);
+
+    for (i in dataset){
+        val = dataset[i];
+        cfg[i] = val === "" ? true : val;
+    }
+
+    data(node, "config", cfg);
+
+    return cfg;
+};
+
 
 
 var Input = function(el, changeFn, changeFnContext, submitFn) {
 
     var self    = this,
+        cfg     = getNodeConfig(el),
         type;
 
     self.el             = el;
     self.cb             = changeFn;
     self.scb            = submitFn;
     self.cbContext      = changeFnContext;
-    self.inputType      = type = (getAttr(el, "mjs-input-type") || el.type.toLowerCase());
+    self.inputType      = type = (cfg.type || el.type.toLowerCase());
     self.listeners      = [];
     self.submittable    = isSubmittable(el);
 
