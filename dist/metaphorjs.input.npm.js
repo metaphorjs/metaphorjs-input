@@ -14,24 +14,8 @@ var bind = Function.prototype.bind ?
               };
 
 
-var addListener = function(el, event, func) {
-    if (el.attachEvent) {
-        el.attachEvent('on' + event, func);
-    } else {
-        el.addEventListener(event, func, false);
-    }
-};
 
-var removeListener = function(el, event, func) {
-    if (el.detachEvent) {
-        el.detachEvent('on' + event, func);
-    } else {
-        el.removeEventListener(event, func, false);
-    }
-};
-var isNull = function(value) {
-    return value === null;
-};
+var slice = Array.prototype.slice;
 var toString = Object.prototype.toString;
 var undf = undefined;
 
@@ -65,7 +49,7 @@ var varType = function(){
         'date': 10
     */
 
-    return function(val) {
+    return function varType(val) {
 
         if (!val) {
             if (val === null) {
@@ -92,7 +76,108 @@ var varType = function(){
 }();
 
 
-var isString = function(value) {
+function isPlainObject(value) {
+    // IE < 9 returns [object Object] from toString(htmlElement)
+    return typeof value == "object" &&
+           varType(value) === 3 &&
+            !value.nodeType &&
+            value.constructor === Object;
+
+};
+
+
+function isBool(value) {
+    return value === true || value === false;
+};
+function isNull(value) {
+    return value === null;
+};
+
+
+/**
+ * @param {Object} dst
+ * @param {Object} src
+ * @param {Object} src2 ... srcN
+ * @param {boolean} override = false
+ * @param {boolean} deep = false
+ * @returns {*}
+ */
+var extend = function(){
+
+    var extend = function extend() {
+
+
+        var override    = false,
+            deep        = false,
+            args        = slice.call(arguments),
+            dst         = args.shift(),
+            src,
+            k,
+            value;
+
+        if (isBool(args[args.length - 1])) {
+            override    = args.pop();
+        }
+        if (isBool(args[args.length - 1])) {
+            deep        = override;
+            override    = args.pop();
+        }
+
+        while (args.length) {
+            if (src = args.shift()) {
+                for (k in src) {
+
+                    if (src.hasOwnProperty(k) && (value = src[k]) !== undf) {
+
+                        if (deep) {
+                            if (dst[k] && isPlainObject(dst[k]) && isPlainObject(value)) {
+                                extend(dst[k], value, override, deep);
+                            }
+                            else {
+                                if (override === true || dst[k] == undf) { // == checks for null and undefined
+                                    if (isPlainObject(value)) {
+                                        dst[k] = {};
+                                        extend(dst[k], value, override, true);
+                                    }
+                                    else {
+                                        dst[k] = value;
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            if (override === true || dst[k] == undf) {
+                                dst[k] = value;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return dst;
+    };
+
+    return extend;
+}();
+function addListener(el, event, func) {
+    if (el.attachEvent) {
+        el.attachEvent('on' + event, func);
+    } else {
+        el.addEventListener(event, func, false);
+    }
+};
+
+function removeListener(el, event, func) {
+    if (el.detachEvent) {
+        el.detachEvent('on' + event, func);
+    } else {
+        el.removeEventListener(event, func, false);
+    }
+};
+
+
+function isString(value) {
     return typeof value == "string" || value === ""+value;
     //return typeof value == "string" || varType(value) === 0;
 };
@@ -206,7 +291,7 @@ var getValue = function(){
  * @param {*} list
  * @returns {[]}
  */
-var toArray = function(list) {
+function toArray(list) {
     if (list && !list.length != undf && list !== ""+list) {
         for(var a = [], i =- 1, l = list.length>>>0; ++i !== l; a[i] = list[i]){}
         return a;
@@ -293,7 +378,7 @@ if (!aIndexOf) {
  * @param {[]} arr
  * @returns {boolean}
  */
-var inArray = function(val, arr) {
+function inArray(val, arr) {
     return arr ? (aIndexOf.call(arr, val) != -1) : false;
 };
 
@@ -302,12 +387,12 @@ var inArray = function(val, arr) {
  * @param {*} value
  * @returns {boolean}
  */
-var isArray = function(value) {
+function isArray(value) {
     return typeof value == "object" && varType(value) === 5;
 };
 
 
-var isNumber = function(value) {
+function isNumber(value) {
     return varType(value) === 1;
 };
 
@@ -386,7 +471,7 @@ var setValue = function() {
  * @param {Element} elem
  * @returns {boolean}
  */
-var isSubmittable = function(elem) {
+function isSubmittable(elem) {
     var type	= elem.type ? elem.type.toLowerCase() : '';
     return elem.nodeName.toLowerCase() == 'input' && type != 'radio' && type != 'checkbox';
 };
@@ -397,7 +482,7 @@ var isAndroid = function(){
 
     var android = parseInt((/android (\d+)/.exec(uaString) || [])[1], 10) || false;
 
-    return function() {
+    return function isAndroid() {
         return android;
     };
 
@@ -412,7 +497,7 @@ var isIE = function(){
         msie    = parseInt((/trident\/.*; rv:(\d+)/.exec(uaString) || [])[1], 10) || false;
     }
 
-    return function() {
+    return function isIE() {
         return msie;
     };
 }();//#require isIE.js
@@ -427,7 +512,7 @@ var browserHasEvent = function(){
 
     var eventSupport = {};
 
-    return function(event) {
+    return function browserHasEvent(event) {
         // IE9 implements 'input' event it's so fubared that we rather pretend that it doesn't have
         // it. In particular the event is not fired when backspace or delete key are pressed or
         // when cut operation is performed.
@@ -445,7 +530,7 @@ var browserHasEvent = function(){
         return eventSupport[event];
     };
 }();
-var getAttr = function(el, name) {
+function getAttr(el, name) {
     return el.getAttribute(name);
 };
 
@@ -1046,7 +1131,7 @@ var nextUid = function(){
     var uid = ['0', '0', '0'];
 
     // from AngularJs
-    return function() {
+    return function nextUid() {
         var index = uid.length;
         var digit;
 
@@ -1085,7 +1170,7 @@ var data = function(){
      * @param {String} key
      * @param {*} value optional
      */
-    return function(el, key, value) {
+    return function data(el, key, value) {
         var id  = getNodeId(el),
             obj = dataCache[id];
 
@@ -1102,7 +1187,7 @@ var data = function(){
     };
 
 }();
-var removeAttr = function(el, name) {
+function removeAttr(el, name) {
     return el.removeAttribute(name);
 };/**
  * @param {Function} fn
@@ -1110,7 +1195,7 @@ var removeAttr = function(el, name) {
  * @param {[]} args
  * @param {number} timeout
  */
-var async = function(fn, context, args, timeout) {
+function async(fn, context, args, timeout) {
     setTimeout(function(){
         fn.apply(context, args || []);
     }, timeout || 0);
@@ -1118,7 +1203,7 @@ var async = function(fn, context, args, timeout) {
 var strUndef = "undefined";
 
 
-var error = function(e) {
+function error(e) {
 
     var stack = e.stack || (new Error).stack;
 
@@ -1135,9 +1220,7 @@ var error = function(e) {
     }
 };
 
-var emptyFn = function(){};
-
-var slice = Array.prototype.slice;
+function emptyFn(){};
 
 
 var functionFactory = function() {
@@ -1146,11 +1229,13 @@ var functionFactory = function() {
 
         f               = Function,
         fnBodyStart     = 'try {',
-        getterBodyEnd   = ';} catch (thrownError) { return $$interceptor(thrownError, $$itself, ____); }',
-        setterBodyEnd   = ';} catch (thrownError) { return $$interceptor(thrownError, $$itself, ____, $$$$); }',
+        //getterBodyEnd   = ';} catch (thrownError) { return $$interceptor(thrownError, $$itself, ____); }',
+        //setterBodyEnd   = ';} catch (thrownError) { return $$interceptor(thrownError, $$itself, ____, $$$$); }',
+        getterBodyEnd   = ';} catch (thrownError) { return undefined; }',
+        setterBodyEnd   = ';} catch (thrownError) { return undefined; }',
 
 
-        interceptor     = function(thrownError, func, scope, value) {
+        /*interceptor     = function(thrownError, func, scope, value) {
 
             while (scope && !scope.$isRoot) {
 
@@ -1175,23 +1260,35 @@ var functionFactory = function() {
             }
 
             return undf;
-        },
+        },*/
 
         isFailed        = function(val) {
             return val === undf || (typeof val == "number" && isNaN(val));
         },
 
         wrapFunc        = function(func, returnsValue) {
-            return function() {
+            return function(scope) {
                 var args = slice.call(arguments),
                     val;
 
-                args.push(interceptor);
+                //args.push(interceptor);
+                args.push(null);
                 args.push(func);
 
-                val = func.apply(null, args);
+                if (returnsValue) {
+                    val = func.apply(null, args);
+                    while (isFailed(val) && !scope.$isRoot) {
+                        scope = scope.$parent;
+                        args[0] = scope;
+                        val = func.apply(null, args);
+                    }
+                    return val;
+                }
+                else {
+                    return func.apply(null, args);
+                }
 
-                if (returnsValue && isFailed(val)) {//) {
+                /*if (returnsValue && isFailed(val)) {//) {
                     args = slice.call(arguments);
                     args.unshift(func);
                     args.unshift(null);
@@ -1199,7 +1296,7 @@ var functionFactory = function() {
                 }
                 else {
                     return val;
-                }
+                }*/
             };
         },
 
@@ -1292,7 +1389,7 @@ var functionFactory = function() {
 var createGetter = functionFactory.createGetter;
 var rToCamelCase = /-./g;
 
-var toCamelCase = function(str) {
+function toCamelCase(str) {
     return str.replace(rToCamelCase, function(match){
         return match.charAt(1).toUpperCase();
     });
@@ -1304,10 +1401,13 @@ var getNodeData = function() {
     var readDataSet = function(node) {
         var attrs = node.attributes,
             dataset = {},
-            i, l;
+            i, l, name;
 
         for (i = 0, l = attrs.length; i < l; i++) {
-            dataset[toCamelCase(attrs[i].name)] = attrs[i].value;
+            name = attrs[i].name;
+            if (name.indexOf("data-") === 0) {
+                dataset[toCamelCase(name.substr(5))] = attrs[i].value;
+            }
         }
 
         return dataset;
@@ -1336,7 +1436,7 @@ var getNodeData = function() {
 }();
 
 
-var getNodeConfig = function(node, scope, expr) {
+function getNodeConfig(node, scope, expr) {
 
     var cfg = data(node, "config"),
         config, dataset, i, val;
@@ -1394,7 +1494,7 @@ var Input = function(el, changeFn, changeFnContext, submitFn) {
     }
 };
 
-Input.prototype = {
+extend(Input.prototype, {
 
     el: null,
     inputType: null,
@@ -1426,10 +1526,11 @@ Input.prototype = {
             }
         }
 
-        delete self.radio;
-        delete self.el;
-        delete self.cb;
-        delete self.cbContext;
+        for (i in self) {
+            if (self.hasOwnProperty(i)) {
+                self[i] = null;
+            }
+        }
     },
 
     initRadioInput: function() {
@@ -1648,7 +1749,7 @@ Input.prototype = {
             return self.processValue(getValue(self.el));
         }
     }
-};
+}, true, false);
 
 Input.getValue = getValue;
 Input.setValue = setValue;

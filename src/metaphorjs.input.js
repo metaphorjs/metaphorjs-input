@@ -1,5 +1,6 @@
 
 var bind    = require("../../metaphorjs/src/func/bind.js"),
+    extend = require("../../metaphorjs/src/func/extend.js"),
     addListener = require("../../metaphorjs/src/func/event/addListener.js"),
     removeListener = require("../../metaphorjs/src/func/event/removeListener.js"),
     getValue = require("func/getValue.js"),
@@ -37,7 +38,7 @@ var Input = function(el, changeFn, changeFnContext, submitFn) {
     }
 };
 
-Input.prototype = {
+extend(Input.prototype, {
 
     el: null,
     inputType: null,
@@ -69,10 +70,11 @@ Input.prototype = {
             }
         }
 
-        delete self.radio;
-        delete self.el;
-        delete self.cb;
-        delete self.cbContext;
+        for (i in self) {
+            if (self.hasOwnProperty(i)) {
+                self[i] = null;
+            }
+        }
     },
 
     initRadioInput: function() {
@@ -291,7 +293,7 @@ Input.prototype = {
             return self.processValue(getValue(self.el));
         }
     }
-};
+}, true, false);
 
 Input.getValue = getValue;
 Input.setValue = setValue;
