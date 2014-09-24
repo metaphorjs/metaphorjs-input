@@ -15,9 +15,13 @@ var bind = Function.prototype.bind ?
 
 
 
+
 var slice = Array.prototype.slice;
+
 var toString = Object.prototype.toString;
+
 var undf = undefined;
+
 
 
 
@@ -76,6 +80,7 @@ var varType = function(){
 }();
 
 
+
 function isPlainObject(value) {
     // IE < 9 returns [object Object] from toString(htmlElement)
     return typeof value == "object" &&
@@ -85,13 +90,10 @@ function isPlainObject(value) {
 
 };
 
-
 function isBool(value) {
     return value === true || value === false;
 };
-function isNull(value) {
-    return value === null;
-};
+
 
 
 /**
@@ -160,6 +162,7 @@ var extend = function(){
 
     return extend;
 }();
+
 function addListener(el, event, func) {
     if (el.attachEvent) {
         el.attachEvent('on' + event, func);
@@ -167,6 +170,7 @@ function addListener(el, event, func) {
         el.addEventListener(event, func, false);
     }
 };
+
 
 function removeListener(el, event, func) {
     if (el.detachEvent) {
@@ -176,11 +180,17 @@ function removeListener(el, event, func) {
     }
 };
 
+function isNull(value) {
+    return value === null;
+};
+
+
 
 function isString(value) {
     return typeof value == "string" || value === ""+value;
     //return typeof value == "string" || varType(value) === 0;
 };
+
 
 
 /**
@@ -198,6 +208,7 @@ var trim = function() {
         return isString(value) ? value.trim() : value;
     };
 }();
+
 
 
 /**
@@ -287,6 +298,7 @@ var getValue = function(){
 }();
 
 
+
 /**
  * @param {*} list
  * @returns {[]}
@@ -303,6 +315,7 @@ function toArray(list) {
         return [];
     }
 };
+
 var aIndexOf    = Array.prototype.indexOf;
 
 if (!aIndexOf) {
@@ -373,6 +386,7 @@ if (!aIndexOf) {
 
 
 
+
 /**
  * @param {*} val
  * @param {[]} arr
@@ -381,6 +395,7 @@ if (!aIndexOf) {
 function inArray(val, arr) {
     return arr ? (aIndexOf.call(arr, val) != -1) : false;
 };
+
 
 
 /**
@@ -392,9 +407,23 @@ function isArray(value) {
 };
 
 
+
 function isNumber(value) {
     return varType(value) === 1;
 };
+
+function getAttr(el, name) {
+    return el.getAttribute ? el.getAttribute(name) : null;
+};
+
+function setAttr(el, name, value) {
+    return el.setAttribute(name, value);
+};
+
+function removeAttr(el, name) {
+    return el.removeAttribute(name);
+};
+
 
 
 /**
@@ -417,16 +446,16 @@ var setValue = function() {
                 option      = options[i];
                 selected    = inArray(option.value, values);
 
-                //if ((option.selected = inArray(option.value, values))) {
                 if (selected) {
-                    option.setAttribute("selected", "selected");
+                    setAttr(option, "selected", "selected");
+                    option.selected = true;
                     optionSet = true;
                 }
                 else {
-                    option.removeAttribute("selected");
+                    removeAttr(option, "selected");
                 }
 
-                if (!selected && !isNull(option.getAttribute("mjs-default-option"))) {
+                if (!selected && !isNull(getAttr(option, "mjs-default-option"))) {
                     setIndex = i;
                 }
             }
@@ -435,6 +464,7 @@ var setValue = function() {
             if (!optionSet) {
                 elem.selectedIndex = setIndex;
             }
+
             return values;
         }
     };
@@ -467,7 +497,8 @@ var setValue = function() {
             el.value = val;
         }
     };
-}();/**
+}();
+/**
  * @param {Element} elem
  * @returns {boolean}
  */
@@ -475,7 +506,9 @@ function isSubmittable(elem) {
     var type	= elem.type ? elem.type.toLowerCase() : '';
     return elem.nodeName.toLowerCase() == 'input' && type != 'radio' && type != 'checkbox';
 };
+
 var uaString = navigator.userAgent.toLowerCase();
+
 
 
 var isAndroid = function(){
@@ -489,6 +522,7 @@ var isAndroid = function(){
 }();
 
 
+
 var isIE = function(){
 
     var msie    = parseInt((/msie (\d+)/.exec(uaString) || [])[1], 10);
@@ -500,7 +534,7 @@ var isIE = function(){
     return function isIE() {
         return msie;
     };
-}();//#require isIE.js
+}();
 
 
 
@@ -530,9 +564,7 @@ var browserHasEvent = function(){
         return eventSupport[event];
     };
 }();
-function getAttr(el, name) {
-    return el.getAttribute(name);
-};
+
 
 
 /**
@@ -1124,6 +1156,7 @@ var select = function() {
     return select;
 }();
 
+
 /**
  * @returns {String}
  */
@@ -1153,6 +1186,7 @@ var nextUid = function(){
         return uid.join('');
     };
 }();
+
 
 
 
@@ -1187,9 +1221,7 @@ var data = function(){
     };
 
 }();
-function removeAttr(el, name) {
-    return el.removeAttribute(name);
-};/**
+/**
  * @param {Function} fn
  * @param {Object} context
  * @param {[]} args
@@ -1200,7 +1232,9 @@ function async(fn, context, args, timeout) {
         fn.apply(context, args || []);
     }, timeout || 0);
 };
+
 var strUndef = "undefined";
+
 
 
 function error(e) {
@@ -1220,7 +1254,9 @@ function error(e) {
     }
 };
 
+
 function emptyFn(){};
+
 
 
 var functionFactory = function() {
@@ -1386,7 +1422,9 @@ var functionFactory = function() {
 }();
 
 
+
 var createGetter = functionFactory.createGetter;
+
 var rToCamelCase = /-./g;
 
 function toCamelCase(str) {
@@ -1394,6 +1432,7 @@ function toCamelCase(str) {
         return match.charAt(1).toUpperCase();
     });
 };
+
 
 
 var getNodeData = function() {
@@ -1436,6 +1475,7 @@ var getNodeData = function() {
 }();
 
 
+
 function getNodeConfig(node, scope, expr) {
 
     var cfg = data(node, "config"),
@@ -1466,6 +1506,7 @@ function getNodeConfig(node, scope, expr) {
 
     return cfg;
 };
+
 
 
 

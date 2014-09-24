@@ -5,7 +5,10 @@ var getValue    = require("./getValue.js"),
     isArray     = require("../../../metaphorjs/src/func/isArray.js"),
     isNumber    = require("../../../metaphorjs/src/func/isNumber.js"),
     undf        = require("../../../metaphorjs/src/var/undf.js"),
-    isNull      = require("../../../metaphorjs/src/func/isNull.js");
+    isNull      = require("../../../metaphorjs/src/func/isNull.js"),
+    getAttr     = require("../../../metaphorjs/src/func/dom/getAttr.js"),
+    setAttr     = require("../../../metaphorjs/src/func/dom/setAttr.js"),
+    removeAttr  = require("../../../metaphorjs/src/func/dom/removeAttr.js");
 
 /**
  * @param {Element} el
@@ -27,16 +30,16 @@ module.exports = function() {
                 option      = options[i];
                 selected    = inArray(option.value, values);
 
-                //if ((option.selected = inArray(option.value, values))) {
                 if (selected) {
-                    option.setAttribute("selected", "selected");
+                    setAttr(option, "selected", "selected");
+                    option.selected = true;
                     optionSet = true;
                 }
                 else {
-                    option.removeAttribute("selected");
+                    removeAttr(option, "selected");
                 }
 
-                if (!selected && !isNull(option.getAttribute("mjs-default-option"))) {
+                if (!selected && !isNull(getAttr(option, "mjs-default-option"))) {
                     setIndex = i;
                 }
             }
@@ -45,6 +48,7 @@ module.exports = function() {
             if (!optionSet) {
                 elem.selectedIndex = setIndex;
             }
+
             return values;
         }
     };
