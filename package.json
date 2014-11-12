@@ -1,19 +1,19 @@
 {
     "name": "metaphorjs-input",
     "version": "0.1.7",
-    "description": "",
+    "description": "MetaphorJs input field wrapper",
     "main": "dist/metaphorjs.input.npm.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/kuindji/metaphorjs-input.git"
+        "url": "https://github.com/metaphorjs/metaphorjs-input.git"
     },
     "author": "kuindji",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/kuindji/metaphorjs-input/issues"
+        "url": "https://github.com/metaphorjs/metaphorjs-input/issues"
     },
-    "homepage": "https://github.com/kuindji/metaphorjs-input"
+    "homepage": "https://github.com/metaphorjs/metaphorjs-input"
 }

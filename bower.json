@@ -4,13 +4,13 @@
     "authors": [
         "kuindji <kuindji@gmail.com>"
     ],
-    "description": "Input field class",
+    "description": "MetaphorJs input field wrapper",
     "main": "dist/metaphorjs.input.amd.min.js",
     "moduleType": [
         "amd"
     ],
     "license": "MIT",
-    "homepage": "https://github.com/kuindji/metaphorjs-input",
+    "homepage": "https://github.com/metaphorjs/metaphorjs-input",
     "ignore": [
         "node_modules",
         "bower_components",
