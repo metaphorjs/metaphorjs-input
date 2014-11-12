@@ -86,7 +86,7 @@ extend(Input.prototype, {
             i, len;
 
 
-        self.radio  = radio = select("input[name="+name+"]");
+        self.radio  = radio = select("input[name="+name+"]", el.ownerDocument);
 
         self.onRadioInputChangeDelegate = bind(self.onRadioInputChange, self);
         self.listeners.push(["click", self.onRadioInputChangeDelegate]);

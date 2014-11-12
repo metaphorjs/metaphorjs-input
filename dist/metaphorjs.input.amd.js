@@ -41,19 +41,21 @@ var varType = function(){
 
 
     /**
-        'string': 0,
-        'number': 1,
-        'boolean': 2,
-        'object': 3,
-        'function': 4,
-        'array': 5,
-        'null': 6,
-        'undefined': 7,
-        'NaN': 8,
-        'regexp': 9,
-        'date': 10
-    */
-
+     * 'string': 0,
+     * 'number': 1,
+     * 'boolean': 2,
+     * 'object': 3,
+     * 'function': 4,
+     * 'array': 5,
+     * 'null': 6,
+     * 'undefined': 7,
+     * 'NaN': 8,
+     * 'regexp': 9,
+     * 'date': 10,
+     * unknown: -1
+     * @param {*} value
+     * @returns {number}
+     */
     return function varType(val) {
 
         if (!val) {
@@ -97,16 +99,17 @@ function isBool(value) {
 
 
 
-/**
- * @param {Object} dst
- * @param {Object} src
- * @param {Object} src2 ... srcN
- * @param {boolean} override = false
- * @param {boolean} deep = false
- * @returns {*}
- */
+
 var extend = function(){
 
+    /**
+     * @param {Object} dst
+     * @param {Object} src
+     * @param {Object} src2 ... srcN
+     * @param {boolean} override = false
+     * @param {boolean} deep = false
+     * @returns {object}
+     */
     var extend = function extend() {
 
 
@@ -195,7 +198,9 @@ function isString(value) {
 
 
 /**
+ * @function trim
  * @param {String} value
+ * @returns {string}
  */
 var trim = function() {
     // native trim is way faster: http://jsperf.com/angular-trim-test
@@ -508,31 +513,36 @@ function isSubmittable(elem) {
     return elem.nodeName.toLowerCase() == 'input' && type != 'radio' && type != 'checkbox';
 };
 
-var uaString = navigator.userAgent.toLowerCase();
-
-
-
 var isAndroid = function(){
 
-    var android = parseInt((/android (\d+)/.exec(uaString) || [])[1], 10) || false;
+    var android = null;
 
     return function isAndroid() {
+
+        if (android === null) {
+            android = parseInt((/android (\d+)/i.exec(navigator.userAgent) || [])[1], 10) || false;
+        }
+
         return android;
     };
 
 }();
 
 
-
 var isIE = function(){
 
-    var msie    = parseInt((/msie (\d+)/.exec(uaString) || [])[1], 10);
-
-    if (isNaN(msie)) {
-        msie    = parseInt((/trident\/.*; rv:(\d+)/.exec(uaString) || [])[1], 10) || false;
-    }
+    var msie;
 
     return function isIE() {
+
+        if (msie === null) {
+            var ua = navigator.userAgent;
+            msie = parseInt((/msie (\d+)/i.exec(ua) || [])[1], 10);
+            if (isNaN(msie)) {
+                msie = parseInt((/trident\/.*; rv:(\d+)/i.exec(ua) || [])[1], 10) || false;
+            }
+        }
+
         return msie;
     };
 }();
@@ -558,7 +568,7 @@ var browserHasEvent = function(){
                 return eventSupport[event] = false;
             }
 
-            var divElm = document.createElement('div');
+            var divElm = window.document.createElement('div');
             eventSupport[event] = !!('on' + event in divElm);
         }
 
@@ -573,7 +583,8 @@ var browserHasEvent = function(){
  */
 
 /**
- * Returns number of nodes or an empty array
+ * Returns array of nodes or an empty array
+ * @function select
  * @param {String} selector
  * @param {Element} root to look into
  */
@@ -593,7 +604,7 @@ var select = function() {
         rRepAftPrn  = /\(.*/,
         rGetSquare  = /\[([^!~^*|$ [:=]+)([$^*|]?=)?([^ :\]]+)?\]/,
 
-        doc         = document,
+        doc         = window.document,
         bcn         = !!doc.getElementsByClassName,
         qsa         = !!doc.querySelectorAll,
 
@@ -1158,13 +1169,13 @@ var select = function() {
 }();
 
 
-/**
- * @returns {String}
- */
 var nextUid = function(){
     var uid = ['0', '0', '0'];
 
     // from AngularJs
+    /**
+     * @returns {String}
+     */
     return function nextUid() {
         var index = uid.length;
         var digit;
@@ -1262,7 +1273,7 @@ function emptyFn(){};
 
 var functionFactory = function() {
 
-    var REG_REPLACE_EXPR    = /(^|[^a-z0-9_$])(\.)([^0-9])/ig,
+    var REG_REPLACE_EXPR    = /(^|[^a-z0-9_$\]\)'"])(\.)([^0-9])/ig,
 
         f               = Function,
         fnBodyStart     = 'try {',
@@ -1341,6 +1352,7 @@ var functionFactory = function() {
         getterCacheCnt  = 0,
 
         createGetter    = function createGetter(expr) {
+
             try {
                 if (!getterCache[expr]) {
                     getterCacheCnt++;
@@ -1453,25 +1465,24 @@ var getNodeData = function() {
         return dataset;
     };
 
-    if (document.documentElement.dataset) {
-        return function(node) {
+
+    return function(node) {
+
+        if (node.dataset) {
             return node.dataset;
-        };
-    }
-    else {
-        return function(node) {
+        }
 
-            var dataset;
+        var dataset;
 
-            if ((dataset = data(node, "data")) !== undf) {
-                return dataset;
-            }
-
-            dataset = readDataSet(node);
-            data(node, "data", dataset);
+        if ((dataset = data(node, "data")) !== undf) {
             return dataset;
-        };
-    }
+        }
+
+        dataset = readDataSet(node);
+        data(node, "data", dataset);
+        return dataset;
+    };
+
 
 }();
 
@@ -1584,7 +1595,7 @@ extend(Input.prototype, {
             i, len;
 
 
-        self.radio  = radio = select("input[name="+name+"]");
+        self.radio  = radio = select("input[name="+name+"]", el.ownerDocument);
 
         self.onRadioInputChangeDelegate = bind(self.onRadioInputChange, self);
         self.listeners.push(["click", self.onRadioInputChangeDelegate]);

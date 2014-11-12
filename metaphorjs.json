@@ -24,14 +24,20 @@
         "npm": {
             "target": "dist/metaphorjs.input.npm.js",
             "compile": false,
+            "wrap": {
+                "exported": true,
+                "deferred": true,
+                "args": ["window"]
+            },
             "files": [
                 [
                     "src/metaphorjs.input.js",
                     {
-                        "keepExports": true
+                        "as": "Input"
                     }
                 ]
-            ]
+            ],
+            "returns": "Input"
         },
         "amd": {
             "target": "dist/metaphorjs.input.amd.js",
