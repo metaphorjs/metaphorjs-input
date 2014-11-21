@@ -143,40 +143,46 @@ extend(Input.prototype, {
             self.onTextInputChange();
         };
 
+        var deferListener = function(ev) {
+            if (!timeout) {
+                timeout = window.setTimeout(function() {
+                    listener(ev);
+                    timeout = null;
+                }, 0);
+            }
+        };
+
+        var keydownSubmit = function(event) {
+            event = event || window.event;
+            var key = event.keyCode;
+
+            if (key == 13) {
+                return self.scb.call(self.cbContext, event);
+            }
+        };
+
+        var keydown = function(event) {
+            event = event || window.event;
+            var key = event.keyCode;
+
+            // ignore
+            //    command            modifiers                   arrows
+            if (key === 91 || (15 < key && key < 19) || (37 <= key && key <= 40)) {
+                return;
+            }
+
+            deferListener(event);
+        };
+
         // if the browser does support "input" event, we are fine - except on
         // IE9 which doesn't fire the
         // input event on backspace, delete or cut
         if (browserHasEvent('input')) {
+
             listeners.push(["input", listener]);
             addListener(node, "input", listener);
 
         } else {
-
-            var deferListener = function(ev) {
-                if (!timeout) {
-                    timeout = window.setTimeout(function() {
-                        listener(ev);
-                        timeout = null;
-                    }, 0);
-                }
-            };
-
-            var keydown = function(event) {
-                event = event || window.event;
-                var key = event.keyCode;
-
-                if (key == 13 && self.submittable && self.scb) {
-                    return self.scb.call(self.cbContext, event);
-                }
-
-                // ignore
-                //    command            modifiers                   arrows
-                if (key === 91 || (15 < key && key < 19) || (37 <= key && key <= 40)) {
-                    return;
-                }
-
-                deferListener(event);
-            };
 
             listeners.push(["keydown", keydown]);
             addListener(node, "keydown", keydown);
@@ -191,6 +197,11 @@ extend(Input.prototype, {
                 addListener(node, "paste", deferListener);
                 addListener(node, "cut", deferListener);
             }
+        }
+
+        if (self.scb && self.submittable) {
+            listeners.push(["keydown", keydownSubmit]);
+            addListener(node, "keydown", keydownSubmit);
         }
 
         // if user paste into input using mouse on older browser
