@@ -5,28 +5,29 @@ var bind    = require("../../metaphorjs/src/func/bind.js"),
     removeListener = require("../../metaphorjs/src/func/event/removeListener.js"),
     getValue = require("func/getValue.js"),
     setValue = require("func/setValue.js"),
-    isSubmittable = require("../../metaphorjs/src/func/dom/isSubmittable.js"),
     isAndroid = require("../../metaphorjs/src/func/browser/isAndroid.js"),
     browserHasEvent = require("../../metaphorjs/src/func/browser/browserHasEvent.js"),
     getAttr = require("../../metaphorjs/src/func/dom/getAttr.js"),
     select = require("../../metaphorjs-select/src/metaphorjs.select.js"),
     getNodeConfig = require("../../metaphorjs/src/func/dom/getNodeConfig.js"),
-    normalizeEvent = require("../../metaphorjs/src/func/event/normalizeEvent.js");
+    normalizeEvent = require("../../metaphorjs/src/func/event/normalizeEvent.js"),
+    Observable = require("../../metaphorjs-observable/src/metaphorjs.observable.js");
 
 
-var Input = function(el, changeFn, changeFnContext, submitFn) {
+var Input = function(el, changeFn, changeFnContext) {
 
     var self    = this,
         cfg     = getNodeConfig(el),
         type;
 
+    self.observable     = new Observable;
     self.el             = el;
-    self.cb             = changeFn;
-    self.scb            = submitFn;
-    self.cbContext      = changeFnContext;
     self.inputType      = type = (cfg.type || el.type.toLowerCase());
     self.listeners      = [];
-    self.submittable    = isSubmittable(el);
+
+    if (changeFn) {
+        self.observable.on("change", changeFn, changeFnContext);
+    }
 
     if (type == "radio") {
         self.initRadioInput();
@@ -37,22 +38,34 @@ var Input = function(el, changeFn, changeFnContext, submitFn) {
     else {
         self.initTextInput();
     }
+
+    self._addOrRemoveListeners(addListener);
 };
 
 extend(Input.prototype, {
 
     el: null,
     inputType: null,
-    cb: null,
-    scb: null,
-    cbContext: null,
     listeners: null,
     radio: null,
-    submittable: false,
-    keyListeners: null,
     keydownDelegate: null,
 
     destroy: function() {
+
+        var self        = this,
+            i;
+
+        self.observable.destroy();
+        self._addOrRemoveListeners(removeListener);
+
+        for (i in self) {
+            if (self.hasOwnProperty(i)) {
+                self[i] = null;
+            }
+        }
+    },
+
+    _addOrRemoveListeners: function(fn) {
 
         var self        = this,
             type        = self.inputType,
@@ -65,17 +78,11 @@ extend(Input.prototype, {
         for (i = 0, ilen = listeners.length; i < ilen; i++) {
             if (type == "radio") {
                 for (j = 0, jlen = radio.length; j < jlen; j++) {
-                    removeListener(radio[j], listeners[i][0], listeners[i][1]);
+                    fn(radio[j], listeners[i][0], listeners[i][1]);
                 }
             }
             else {
-                removeListener(el, listeners[i][0], listeners[i][1]);
-            }
-        }
-
-        for (i in self) {
-            if (self.hasOwnProperty(i)) {
-                self[i] = null;
+                fn(el, listeners[i][0], listeners[i][1]);
             }
         }
     },
@@ -84,19 +91,13 @@ extend(Input.prototype, {
 
         var self    = this,
             el      = self.el,
-            name    = el.name,
-            radio,
-            i, len;
+            name    = el.name;
 
 
-        self.radio  = radio = select("input[name="+name+"]", el.ownerDocument);
+        self.radio  = select("input[name="+name+"]", el.ownerDocument);
 
         self.onRadioInputChangeDelegate = bind(self.onRadioInputChange, self);
         self.listeners.push(["click", self.onRadioInputChangeDelegate]);
-
-        for (i = 0, len = radio.length; i < len; i++) {
-            addListener(radio[i], "click", self.onRadioInputChangeDelegate);
-        }
     },
 
     initCheckboxInput: function() {
@@ -104,16 +105,13 @@ extend(Input.prototype, {
         var self    = this;
 
         self.onCheckboxInputChangeDelegate = bind(self.onCheckboxInputChange, self);
-
         self.listeners.push(["click", self.onCheckboxInputChangeDelegate]);
-        addListener(self.el, "click", self.onCheckboxInputChangeDelegate);
     },
 
     initTextInput: function() {
 
         var composing   = false,
             self        = this,
-            node        = self.el,
             listeners   = self.listeners,
             timeout;
 
@@ -134,9 +132,6 @@ extend(Input.prototype, {
 
             listeners.push(["compositionstart", compositionStart]);
             listeners.push(["compositionend", compositionEnd]);
-
-            addListener(node, "compositionstart", compositionStart);
-            addListener(node, "compositionend", compositionEnd);
         }
 
         var listener = self.onTextInputChangeDelegate = function() {
@@ -148,19 +143,10 @@ extend(Input.prototype, {
 
         var deferListener = function(ev) {
             if (!timeout) {
-                timeout = window.setTimeout(function() {
+                timeout = setTimeout(function() {
                     listener(ev);
                     timeout = null;
                 }, 0);
-            }
-        };
-
-        var keydownSubmit = function(event) {
-            event = event || window.event;
-            var key = event.keyCode;
-
-            if (key == 13) {
-                return self.scb.call(self.cbContext, event);
             }
         };
 
@@ -183,35 +169,24 @@ extend(Input.prototype, {
         if (browserHasEvent('input')) {
 
             listeners.push(["input", listener]);
-            addListener(node, "input", listener);
 
         } else {
 
             listeners.push(["keydown", keydown]);
-            addListener(node, "keydown", keydown);
 
             // if user modifies input value using context menu in IE,
             // we need "paste" and "cut" events to catch it
             if (browserHasEvent('paste')) {
-
                 listeners.push(["paste", deferListener]);
                 listeners.push(["cut", deferListener]);
-
-                addListener(node, "paste", deferListener);
-                addListener(node, "cut", deferListener);
             }
         }
 
-        if (self.scb && self.submittable) {
-            listeners.push(["keydown", keydownSubmit]);
-            addListener(node, "keydown", keydownSubmit);
-        }
 
         // if user paste into input using mouse on older browser
         // or form autocomplete on newer browser, we need "change" event to catch it
 
         listeners.push(["change", listener]);
-        addListener(node, "change", listener);
     },
 
     processValue: function(val) {
@@ -233,9 +208,7 @@ extend(Input.prototype, {
         var self    = this,
             val     = self.getValue();
 
-        if (self.cb) {
-            self.cb.call(self.cbContext, val);
-        }
+        self.observable.trigger("change", val);
     },
 
     onCheckboxInputChange: function() {
@@ -243,9 +216,7 @@ extend(Input.prototype, {
         var self    = this,
             node    = self.el;
 
-        if (self.cb) {
-            self.cb.call(self.cbContext, node.checked ? (getAttr(node, "value") || true) : false);
-        }
+        self.observable.trigger("change", node.checked ? (getAttr(node, "value") || true) : false);
     },
 
     onRadioInputChange: function(e) {
@@ -255,9 +226,7 @@ extend(Input.prototype, {
         var self    = this,
             trg     = e.target || e.srcElement;
 
-        if (self.cb) {
-            self.cb.call(self.cbContext, trg.value);
-        }
+        self.observable.trigger("change", trg.value);
     },
 
     setValue: function(val) {
@@ -308,65 +277,63 @@ extend(Input.prototype, {
         }
     },
 
+
+    onChange: function(fn, context) {
+        this.observable.on("change", fn, context);
+    },
+
+    unChange: function(fn, context) {
+        this.observable.un("change", fn, context);
+    },
+
+
     onKey: function(key, fn, context) {
 
         var self = this;
 
-        if (!self.keyListeners) {
-            self.keyListeners = [];
+        if (!self.keydownDelegate) {
             self.keydownDelegate = bind(self.keyHandler, self);
             self.listeners.push(["keydown", self.keydownDelegate]);
             addListener(self.el, "keydown", self.keydownDelegate);
+            self.observable.createEvent("key", false, false, self.keyEventFilter);
         }
 
-        self.keyListeners.push({
-            key: key,
-            fn: fn,
-            context: context
+        self.observable.on("key", fn, context, {
+            key: key
         });
+    },
+
+    unKey: function(key, fn, context) {
+
+        var self    = this;
+        self.observable.un("key", fn, context);
+    },
+
+    keyEventFilter: function(l, args) {
+
+        var key = l.key,
+            e = args[0];
+
+        if (typeof key != "object") {
+            return key == e.keyCode;
+        }
+        else {
+            if (key.ctrlKey !== undf && key.ctrlKey != e.ctrlKey) {
+                return false;
+            }
+            if (key.shiftKey !== undf && key.shiftKey != e.shiftKey) {
+                return false;
+            }
+            return !(key.keyCode !== undf && key.keyCode != e.keyCode);
+        }
     },
 
     keyHandler: function(event) {
 
         var e       = normalizeEvent(event || window.event),
-            self    = this,
-            kl      = self.keyListeners,
-            i, l,
-            key;
+            self    = this;
 
-        for (i = 0, l = kl.length; i < l; i++) {
-            key = kl[i].key;
-            if (typeof key != "object") {
-                if (key == e.keyCode) {
-                    kl[i].fn.call(kl[i].context, e);
-                }
-            }
-            else {
-                if (key.ctrlKey !== undf && key.ctrlKey != e.ctrlKey) {
-                    continue;
-                }
-                if (key.shiftKey !== undf && key.shiftKey != e.shiftKey) {
-                    continue;
-                }
-                if (key.keyCode !== undf && key.keyCode != e.keyCode) {
-                    continue;
-                }
-                kl[i].fn.call(kl[i].context, e);
-            }
-        }
-    },
-
-    unKey: function(key, fn, context) {
-
-        var self    = this,
-            kl      = self.keyListeners,
-            i, l;
-
-        for (i = 0, l = kl.length; i < l; i++) {
-            if (kl[i].key == key && kl[i].fn === fn && kl[i].context === context) {
-                kl.splice(i, 1);
-            }
-        }
+        self.observable.trigger("key", e);
     }
 
 
