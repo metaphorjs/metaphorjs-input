@@ -16,6 +16,13 @@ var bind    = require("../../metaphorjs/src/func/bind.js"),
 
 var Input = function(el, changeFn, changeFnContext) {
 
+    if (el.$$input) {
+        if (changeFn) {
+            el.$$input.on("change", changeFn, changeFnContext);
+        }
+        return el.$$input;
+    }
+
     var self    = this,
         cfg     = getNodeConfig(el),
         type;
@@ -57,6 +64,8 @@ extend(Input.prototype, {
 
         self.observable.destroy();
         self._addOrRemoveListeners(removeListener);
+
+        self.el.$$input = null;
 
         for (i in self) {
             if (self.hasOwnProperty(i)) {
@@ -338,6 +347,14 @@ extend(Input.prototype, {
 
 
 }, true, false);
+
+
+Input.get = function(node) {
+    if (node.$$input) {
+        return node.$$input;
+    }
+    return new Input(node);
+};
 
 Input.getValue = getValue;
 Input.setValue = setValue;
