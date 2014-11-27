@@ -1,24 +1,9 @@
 module.exports = function (window) {
 "use strict";
 
-/**
- * @param {Function} fn
- * @param {*} context
- */
-var bind = Function.prototype.bind ?
-              function(fn, context){
-                  return fn.bind(context);
-              } :
-              function(fn, context) {
-                  return function() {
-                      return fn.apply(context, arguments);
-                  };
-              };
-
-
-
-
-var slice = Array.prototype.slice;
+function isNull(value) {
+    return value === null;
+};
 
 var toString = Object.prototype.toString;
 
@@ -81,413 +66,6 @@ var varType = function(){
         return num;
     };
 
-}();
-
-
-
-function isPlainObject(value) {
-    // IE < 9 returns [object Object] from toString(htmlElement)
-    return typeof value == "object" &&
-           varType(value) === 3 &&
-            !value.nodeType &&
-            value.constructor === Object;
-
-};
-
-function isBool(value) {
-    return value === true || value === false;
-};
-
-
-
-
-var extend = function(){
-
-    /**
-     * @param {Object} dst
-     * @param {Object} src
-     * @param {Object} src2 ... srcN
-     * @param {boolean} override = false
-     * @param {boolean} deep = false
-     * @returns {object}
-     */
-    var extend = function extend() {
-
-
-        var override    = false,
-            deep        = false,
-            args        = slice.call(arguments),
-            dst         = args.shift(),
-            src,
-            k,
-            value;
-
-        if (isBool(args[args.length - 1])) {
-            override    = args.pop();
-        }
-        if (isBool(args[args.length - 1])) {
-            deep        = override;
-            override    = args.pop();
-        }
-
-        while (args.length) {
-            if (src = args.shift()) {
-                for (k in src) {
-
-                    if (src.hasOwnProperty(k) && (value = src[k]) !== undf) {
-
-                        if (deep) {
-                            if (dst[k] && isPlainObject(dst[k]) && isPlainObject(value)) {
-                                extend(dst[k], value, override, deep);
-                            }
-                            else {
-                                if (override === true || dst[k] == undf) { // == checks for null and undefined
-                                    if (isPlainObject(value)) {
-                                        dst[k] = {};
-                                        extend(dst[k], value, override, true);
-                                    }
-                                    else {
-                                        dst[k] = value;
-                                    }
-                                }
-                            }
-                        }
-                        else {
-                            if (override === true || dst[k] == undf) {
-                                dst[k] = value;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return dst;
-    };
-
-    return extend;
-}();
-
-function returnFalse() {
-    return false;
-};
-
-
-function returnTrue() {
-    return true;
-};
-
-function isNull(value) {
-    return value === null;
-};
-
-
-
-// from jQuery
-
-var DomEvent = function(src) {
-
-    if (src instanceof DomEvent) {
-        return src;
-    }
-
-    // Allow instantiation without the 'new' keyword
-    if (!(this instanceof DomEvent)) {
-        return new DomEvent(src);
-    }
-
-
-    var self    = this;
-
-    for (var i in src) {
-        if (!self[i]) {
-            try {
-                self[i] = src[i];
-            }
-            catch (thrownError){}
-        }
-    }
-
-
-    // Event object
-    self.originalEvent = src;
-    self.type = src.type;
-
-    if (!self.target && src.srcElement) {
-        self.target = src.srcElement;
-    }
-
-
-    var eventDoc, doc, body,
-        button = src.button;
-
-    // Calculate pageX/Y if missing and clientX/Y available
-    if (self.pageX === undf && !isNull(src.clientX)) {
-        eventDoc = self.target ? self.target.ownerDocument || window.document : window.document;
-        doc = eventDoc.documentElement;
-        body = eventDoc.body;
-
-        self.pageX = src.clientX +
-                      ( doc && doc.scrollLeft || body && body.scrollLeft || 0 ) -
-                      ( doc && doc.clientLeft || body && body.clientLeft || 0 );
-        self.pageY = src.clientY +
-                      ( doc && doc.scrollTop  || body && body.scrollTop  || 0 ) -
-                      ( doc && doc.clientTop  || body && body.clientTop  || 0 );
-    }
-
-    // Add which for click: 1 === left; 2 === middle; 3 === right
-    // Note: button is not normalized, so don't use it
-    if ( !self.which && button !== undf ) {
-        self.which = ( button & 1 ? 1 : ( button & 2 ? 3 : ( button & 4 ? 2 : 0 ) ) );
-    }
-
-    // Events bubbling up the document may have been marked as prevented
-    // by a handler lower down the tree; reflect the correct value.
-    self.isDefaultPrevented = src.defaultPrevented ||
-                              src.defaultPrevented === undf &&
-                                  // Support: Android<4.0
-                              src.returnValue === false ?
-                              returnTrue :
-                              returnFalse;
-
-
-    // Create a timestamp if incoming event doesn't have one
-    self.timeStamp = src && src.timeStamp || (new Date).getTime();
-};
-
-// Event is based on DOM3 Events as specified by the ECMAScript Language Binding
-// http://www.w3.org/TR/2003/WD-DOM-Level-3-Events-20030331/ecma-script-binding.html
-extend(DomEvent.prototype, {
-
-    isDefaultPrevented: returnFalse,
-    isPropagationStopped: returnFalse,
-    isImmediatePropagationStopped: returnFalse,
-
-    preventDefault: function() {
-        var e = this.originalEvent;
-
-        this.isDefaultPrevented = returnTrue;
-        e.returnValue = false;
-
-        if ( e && e.preventDefault ) {
-            e.preventDefault();
-        }
-    },
-    stopPropagation: function() {
-        var e = this.originalEvent;
-
-        this.isPropagationStopped = returnTrue;
-
-        if ( e && e.stopPropagation ) {
-            e.stopPropagation();
-        }
-    },
-    stopImmediatePropagation: function() {
-        var e = this.originalEvent;
-
-        this.isImmediatePropagationStopped = returnTrue;
-
-        if ( e && e.stopImmediatePropagation ) {
-            e.stopImmediatePropagation();
-        }
-
-        this.stopPropagation();
-    }
-}, true, false);
-
-
-
-
-function normalizeEvent(originalEvent) {
-    return new DomEvent(originalEvent);
-};
-
-
-// from jquery.mousewheel plugin
-
-
-
-var mousewheelHandler = function(e) {
-
-    function shouldAdjustOldDeltas(orgEvent, absDelta) {
-        // If this is an older event and the delta is divisable by 120,
-        // then we are assuming that the browser is treating this as an
-        // older mouse wheel event and that we should divide the deltas
-        // by 40 to try and get a more usable deltaFactor.
-        // Side note, this actually impacts the reported scroll distance
-        // in older browsers and can cause scrolling to be slower than native.
-        // Turn this off by setting $.event.special.mousewheel.settings.adjustOldDeltas to false.
-        return orgEvent.type === 'mousewheel' && absDelta % 120 === 0;
-    }
-
-    function nullLowestDelta() {
-        lowestDelta = null;
-    }
-
-    var toBind = ( 'onwheel' in window.document || window.document.documentMode >= 9 ) ?
-                 ['wheel'] : ['mousewheel', 'DomMouseScroll', 'MozMousePixelScroll'],
-        nullLowestDeltaTimeout, lowestDelta;
-
-    var mousewheelHandler = function(fn) {
-
-        return function(e) {
-
-            var event = normalizeEvent(e || window.event),
-                args = slice.call(arguments, 1),
-                delta = 0,
-                deltaX = 0,
-                deltaY = 0,
-                absDelta = 0,
-                offsetX = 0,
-                offsetY = 0;
-
-
-            event.type = 'mousewheel';
-
-            // Old school scrollwheel delta
-            if ('detail'      in event) { deltaY = event.detail * -1; }
-            if ('wheelDelta'  in event) { deltaY = event.wheelDelta; }
-            if ('wheelDeltaY' in event) { deltaY = event.wheelDeltaY; }
-            if ('wheelDeltaX' in event) { deltaX = event.wheelDeltaX * -1; }
-
-            // Firefox < 17 horizontal scrolling related to DOMMouseScroll event
-            if ('axis' in event && event.axis === event.HORIZONTAL_AXIS) {
-                deltaX = deltaY * -1;
-                deltaY = 0;
-            }
-
-            // Set delta to be deltaY or deltaX if deltaY is 0 for backwards compatabilitiy
-            delta = deltaY === 0 ? deltaX : deltaY;
-
-            // New school wheel delta (wheel event)
-            if ('deltaY' in event) {
-                deltaY = event.deltaY * -1;
-                delta = deltaY;
-            }
-            if ('deltaX' in event) {
-                deltaX = event.deltaX;
-                if (deltaY === 0) { delta = deltaX * -1; }
-            }
-
-            // No change actually happened, no reason to go any further
-            if (deltaY === 0 && deltaX === 0) { return; }
-
-            // Store lowest absolute delta to normalize the delta values
-            absDelta = Math.max(Math.abs(deltaY), Math.abs(deltaX));
-
-            if (!lowestDelta || absDelta < lowestDelta) {
-                lowestDelta = absDelta;
-
-                // Adjust older deltas if necessary
-                if (shouldAdjustOldDeltas(event, absDelta)) {
-                    lowestDelta /= 40;
-                }
-            }
-
-            // Adjust older deltas if necessary
-            if (shouldAdjustOldDeltas(event, absDelta)) {
-                // Divide all the things by 40!
-                delta /= 40;
-                deltaX /= 40;
-                deltaY /= 40;
-            }
-
-            // Get a whole, normalized value for the deltas
-            delta = Math[delta >= 1 ? 'floor' : 'ceil'](delta / lowestDelta);
-            deltaX = Math[deltaX >= 1 ? 'floor' : 'ceil'](deltaX / lowestDelta);
-            deltaY = Math[deltaY >= 1 ? 'floor' : 'ceil'](deltaY / lowestDelta);
-
-            // Normalise offsetX and offsetY properties
-            if (this.getBoundingClientRect) {
-                var boundingRect = this.getBoundingClientRect();
-                offsetX = event.clientX - boundingRect.left;
-                offsetY = event.clientY - boundingRect.top;
-            }
-
-            // Add information to the event object
-            event.deltaX = deltaX;
-            event.deltaY = deltaY;
-            event.deltaFactor = lowestDelta;
-            event.offsetX = offsetX;
-            event.offsetY = offsetY;
-            // Go ahead and set deltaMode to 0 since we converted to pixels
-            // Although this is a little odd since we overwrite the deltaX/Y
-            // properties with normalized deltas.
-            event.deltaMode = 0;
-
-            // Add event and delta to the front of the arguments
-            args.unshift(event, delta, deltaX, deltaY);
-
-            // Clearout lowestDelta after sometime to better
-            // handle multiple device types that give different
-            // a different lowestDelta
-            // Ex: trackpad = 3 and mouse wheel = 120
-            if (nullLowestDeltaTimeout) { clearTimeout(nullLowestDeltaTimeout); }
-            nullLowestDeltaTimeout = setTimeout(nullLowestDelta, 200);
-
-
-
-            return fn.apply(this, args);
-        }
-    };
-
-    mousewheelHandler.events = function() {
-        var doc = window.document;
-        return ( 'onwheel' in doc || doc.documentMode >= 9 ) ?
-               ['wheel'] : ['mousewheel', 'DomMouseScroll', 'MozMousePixelScroll'];
-    };
-
-    return mousewheelHandler;
-
-}();
-
-
-
-var addListener = function(){
-
-    var fn = null,
-        prefix = null;
-
-    return function addListener(el, event, func) {
-
-        if (fn === null) {
-            fn = el.attachEvent ? "attachEvent" : "addEventListener";
-            prefix = el.attachEvent ? "on" : "";
-        }
-
-
-        if (event == "mousewheel") {
-            func = mousewheelHandler(func);
-            var events = mousewheelHandler.events(),
-                i, l;
-            for (i = 0, l = events.length; i < l; i++) {
-                el[fn](prefix + events[i], func, false);
-            }
-        }
-        else {
-            el[fn](prefix + event, func, false);
-        }
-
-        return func;
-    }
-
-}();
-
-
-var removeListener = function(){
-
-    var fn = null,
-        prefix = null;
-
-    return function removeListener(el, event, func) {
-
-        if (fn === null) {
-            fn = el.detachEvent ? "detachEvent" : "removeEventListener";
-            prefix = el.detachEvent ? "on" : "";
-        }
-
-        el[fn](prefix + event, func);
-    }
 }();
 
 
@@ -805,6 +383,450 @@ var setValue = function() {
             el.value = val;
         }
     };
+}();
+
+/**
+ * @param {Function} fn
+ * @param {*} context
+ */
+var bind = Function.prototype.bind ?
+              function(fn, context){
+                  return fn.bind(context);
+              } :
+              function(fn, context) {
+                  return function() {
+                      return fn.apply(context, arguments);
+                  };
+              };
+
+
+
+
+var slice = Array.prototype.slice;
+
+
+
+function isPlainObject(value) {
+    // IE < 9 returns [object Object] from toString(htmlElement)
+    return typeof value == "object" &&
+           varType(value) === 3 &&
+            !value.nodeType &&
+            value.constructor === Object;
+
+};
+
+function isBool(value) {
+    return value === true || value === false;
+};
+
+
+
+
+var extend = function(){
+
+    /**
+     * @param {Object} dst
+     * @param {Object} src
+     * @param {Object} src2 ... srcN
+     * @param {boolean} override = false
+     * @param {boolean} deep = false
+     * @returns {object}
+     */
+    var extend = function extend() {
+
+
+        var override    = false,
+            deep        = false,
+            args        = slice.call(arguments),
+            dst         = args.shift(),
+            src,
+            k,
+            value;
+
+        if (isBool(args[args.length - 1])) {
+            override    = args.pop();
+        }
+        if (isBool(args[args.length - 1])) {
+            deep        = override;
+            override    = args.pop();
+        }
+
+        while (args.length) {
+            if (src = args.shift()) {
+                for (k in src) {
+
+                    if (src.hasOwnProperty(k) && (value = src[k]) !== undf) {
+
+                        if (deep) {
+                            if (dst[k] && isPlainObject(dst[k]) && isPlainObject(value)) {
+                                extend(dst[k], value, override, deep);
+                            }
+                            else {
+                                if (override === true || dst[k] == undf) { // == checks for null and undefined
+                                    if (isPlainObject(value)) {
+                                        dst[k] = {};
+                                        extend(dst[k], value, override, true);
+                                    }
+                                    else {
+                                        dst[k] = value;
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            if (override === true || dst[k] == undf) {
+                                dst[k] = value;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return dst;
+    };
+
+    return extend;
+}();
+
+function returnFalse() {
+    return false;
+};
+
+
+function returnTrue() {
+    return true;
+};
+
+
+
+// from jQuery
+
+var DomEvent = function(src) {
+
+    if (src instanceof DomEvent) {
+        return src;
+    }
+
+    // Allow instantiation without the 'new' keyword
+    if (!(this instanceof DomEvent)) {
+        return new DomEvent(src);
+    }
+
+
+    var self    = this;
+
+    for (var i in src) {
+        if (!self[i]) {
+            try {
+                self[i] = src[i];
+            }
+            catch (thrownError){}
+        }
+    }
+
+
+    // Event object
+    self.originalEvent = src;
+    self.type = src.type;
+
+    if (!self.target && src.srcElement) {
+        self.target = src.srcElement;
+    }
+
+
+    var eventDoc, doc, body,
+        button = src.button;
+
+    // Calculate pageX/Y if missing and clientX/Y available
+    if (self.pageX === undf && !isNull(src.clientX)) {
+        eventDoc = self.target ? self.target.ownerDocument || window.document : window.document;
+        doc = eventDoc.documentElement;
+        body = eventDoc.body;
+
+        self.pageX = src.clientX +
+                      ( doc && doc.scrollLeft || body && body.scrollLeft || 0 ) -
+                      ( doc && doc.clientLeft || body && body.clientLeft || 0 );
+        self.pageY = src.clientY +
+                      ( doc && doc.scrollTop  || body && body.scrollTop  || 0 ) -
+                      ( doc && doc.clientTop  || body && body.clientTop  || 0 );
+    }
+
+    // Add which for click: 1 === left; 2 === middle; 3 === right
+    // Note: button is not normalized, so don't use it
+    if ( !self.which && button !== undf ) {
+        self.which = ( button & 1 ? 1 : ( button & 2 ? 3 : ( button & 4 ? 2 : 0 ) ) );
+    }
+
+    // Events bubbling up the document may have been marked as prevented
+    // by a handler lower down the tree; reflect the correct value.
+    self.isDefaultPrevented = src.defaultPrevented ||
+                              src.defaultPrevented === undf &&
+                                  // Support: Android<4.0
+                              src.returnValue === false ?
+                              returnTrue :
+                              returnFalse;
+
+
+    // Create a timestamp if incoming event doesn't have one
+    self.timeStamp = src && src.timeStamp || (new Date).getTime();
+};
+
+// Event is based on DOM3 Events as specified by the ECMAScript Language Binding
+// http://www.w3.org/TR/2003/WD-DOM-Level-3-Events-20030331/ecma-script-binding.html
+extend(DomEvent.prototype, {
+
+    isDefaultPrevented: returnFalse,
+    isPropagationStopped: returnFalse,
+    isImmediatePropagationStopped: returnFalse,
+
+    preventDefault: function() {
+        var e = this.originalEvent;
+
+        this.isDefaultPrevented = returnTrue;
+        e.returnValue = false;
+
+        if ( e && e.preventDefault ) {
+            e.preventDefault();
+        }
+    },
+    stopPropagation: function() {
+        var e = this.originalEvent;
+
+        this.isPropagationStopped = returnTrue;
+
+        if ( e && e.stopPropagation ) {
+            e.stopPropagation();
+        }
+    },
+    stopImmediatePropagation: function() {
+        var e = this.originalEvent;
+
+        this.isImmediatePropagationStopped = returnTrue;
+
+        if ( e && e.stopImmediatePropagation ) {
+            e.stopImmediatePropagation();
+        }
+
+        this.stopPropagation();
+    }
+}, true, false);
+
+
+
+
+function normalizeEvent(originalEvent) {
+    return new DomEvent(originalEvent);
+};
+
+
+// from jquery.mousewheel plugin
+
+
+
+var mousewheelHandler = function(e) {
+
+    function shouldAdjustOldDeltas(orgEvent, absDelta) {
+        // If this is an older event and the delta is divisable by 120,
+        // then we are assuming that the browser is treating this as an
+        // older mouse wheel event and that we should divide the deltas
+        // by 40 to try and get a more usable deltaFactor.
+        // Side note, this actually impacts the reported scroll distance
+        // in older browsers and can cause scrolling to be slower than native.
+        // Turn this off by setting $.event.special.mousewheel.settings.adjustOldDeltas to false.
+        return orgEvent.type === 'mousewheel' && absDelta % 120 === 0;
+    }
+
+    function nullLowestDelta() {
+        lowestDelta = null;
+    }
+
+    var toBind = ( 'onwheel' in window.document || window.document.documentMode >= 9 ) ?
+                 ['wheel'] : ['mousewheel', 'DomMouseScroll', 'MozMousePixelScroll'],
+        nullLowestDeltaTimeout, lowestDelta;
+
+    var mousewheelHandler = function(fn) {
+
+        return function(e) {
+
+            var event = normalizeEvent(e || window.event),
+                args = slice.call(arguments, 1),
+                delta = 0,
+                deltaX = 0,
+                deltaY = 0,
+                absDelta = 0,
+                offsetX = 0,
+                offsetY = 0;
+
+
+            event.type = 'mousewheel';
+
+            // Old school scrollwheel delta
+            if ('detail'      in event) { deltaY = event.detail * -1; }
+            if ('wheelDelta'  in event) { deltaY = event.wheelDelta; }
+            if ('wheelDeltaY' in event) { deltaY = event.wheelDeltaY; }
+            if ('wheelDeltaX' in event) { deltaX = event.wheelDeltaX * -1; }
+
+            // Firefox < 17 horizontal scrolling related to DOMMouseScroll event
+            if ('axis' in event && event.axis === event.HORIZONTAL_AXIS) {
+                deltaX = deltaY * -1;
+                deltaY = 0;
+            }
+
+            // Set delta to be deltaY or deltaX if deltaY is 0 for backwards compatabilitiy
+            delta = deltaY === 0 ? deltaX : deltaY;
+
+            // New school wheel delta (wheel event)
+            if ('deltaY' in event) {
+                deltaY = event.deltaY * -1;
+                delta = deltaY;
+            }
+            if ('deltaX' in event) {
+                deltaX = event.deltaX;
+                if (deltaY === 0) { delta = deltaX * -1; }
+            }
+
+            // No change actually happened, no reason to go any further
+            if (deltaY === 0 && deltaX === 0) { return; }
+
+            // Store lowest absolute delta to normalize the delta values
+            absDelta = Math.max(Math.abs(deltaY), Math.abs(deltaX));
+
+            if (!lowestDelta || absDelta < lowestDelta) {
+                lowestDelta = absDelta;
+
+                // Adjust older deltas if necessary
+                if (shouldAdjustOldDeltas(event, absDelta)) {
+                    lowestDelta /= 40;
+                }
+            }
+
+            // Adjust older deltas if necessary
+            if (shouldAdjustOldDeltas(event, absDelta)) {
+                // Divide all the things by 40!
+                delta /= 40;
+                deltaX /= 40;
+                deltaY /= 40;
+            }
+
+            // Get a whole, normalized value for the deltas
+            delta = Math[delta >= 1 ? 'floor' : 'ceil'](delta / lowestDelta);
+            deltaX = Math[deltaX >= 1 ? 'floor' : 'ceil'](deltaX / lowestDelta);
+            deltaY = Math[deltaY >= 1 ? 'floor' : 'ceil'](deltaY / lowestDelta);
+
+            // Normalise offsetX and offsetY properties
+            if (this.getBoundingClientRect) {
+                var boundingRect = this.getBoundingClientRect();
+                offsetX = event.clientX - boundingRect.left;
+                offsetY = event.clientY - boundingRect.top;
+            }
+
+            // Add information to the event object
+            event.deltaX = deltaX;
+            event.deltaY = deltaY;
+            event.deltaFactor = lowestDelta;
+            event.offsetX = offsetX;
+            event.offsetY = offsetY;
+            // Go ahead and set deltaMode to 0 since we converted to pixels
+            // Although this is a little odd since we overwrite the deltaX/Y
+            // properties with normalized deltas.
+            event.deltaMode = 0;
+
+            // Add event and delta to the front of the arguments
+            args.unshift(event, delta, deltaX, deltaY);
+
+            // Clearout lowestDelta after sometime to better
+            // handle multiple device types that give different
+            // a different lowestDelta
+            // Ex: trackpad = 3 and mouse wheel = 120
+            if (nullLowestDeltaTimeout) { clearTimeout(nullLowestDeltaTimeout); }
+            nullLowestDeltaTimeout = setTimeout(nullLowestDelta, 200);
+
+
+
+            return fn.apply(this, args);
+        }
+    };
+
+    mousewheelHandler.events = function() {
+        var doc = window.document;
+        return ( 'onwheel' in doc || doc.documentMode >= 9 ) ?
+               ['wheel'] : ['mousewheel', 'DomMouseScroll', 'MozMousePixelScroll'];
+    };
+
+    return mousewheelHandler;
+
+}();
+
+
+
+var addListener = function(){
+
+    var fn = null,
+        prefix = null;
+
+    return function addListener(el, event, func) {
+
+        if (fn === null) {
+            fn = el.attachEvent ? "attachEvent" : "addEventListener";
+            prefix = el.attachEvent ? "on" : "";
+        }
+
+
+        if (event == "mousewheel") {
+            func = mousewheelHandler(func);
+            var events = mousewheelHandler.events(),
+                i, l;
+            for (i = 0, l = events.length; i < l; i++) {
+                el[fn](prefix + events[i], func, false);
+            }
+        }
+        else {
+            el[fn](prefix + event, func, false);
+        }
+
+        return func;
+    }
+
+}();
+
+
+var removeListener = function(){
+
+    var fn = null,
+        prefix = null;
+
+    return function removeListener(el, event, func) {
+
+        if (fn === null) {
+            fn = el.detachEvent ? "detachEvent" : "removeEventListener";
+            prefix = el.detachEvent ? "on" : "";
+        }
+
+        el[fn](prefix + event, func);
+    }
+}();
+
+var isAttached = function(){
+    var isAttached = function isAttached(node) {
+
+        if (node === window) {
+            return true;
+        }
+        if (node.nodeType == 3) {
+            if (node.parentElement) {
+                return isAttached(node.parentElement);
+            }
+            else {
+                return true;
+            }
+        }
+
+        var html = window.document.documentElement;
+
+        return node === html ? true : html.contains(node);
+    };
+    return isAttached;
 }();
 
 var isAndroid = function(){
@@ -2556,29 +2578,16 @@ var Input = function(el, changeFn, changeFnContext) {
     }
 
     var self    = this,
-        cfg     = getNodeConfig(el),
-        type;
+        cfg     = getNodeConfig(el);
 
     self.observable     = new Observable;
     self.el             = el;
-    self.inputType      = type = (cfg.type || el.type.toLowerCase());
+    self.inputType      = cfg.type || el.type.toLowerCase();
     self.listeners      = [];
 
     if (changeFn) {
-        self.observable.on("change", changeFn, changeFnContext);
+        self.onChange(changeFn, changeFnContext);
     }
-
-    if (type == "radio") {
-        self.initRadioInput();
-    }
-    else if (type == "checkbox") {
-        self.initCheckboxInput();
-    }
-    else {
-        self.initTextInput();
-    }
-
-    self._addOrRemoveListeners(addListener);
 };
 
 extend(Input.prototype, {
@@ -2588,6 +2597,7 @@ extend(Input.prototype, {
     listeners: null,
     radio: null,
     keydownDelegate: null,
+    changeInitialized: false,
 
     destroy: function() {
 
@@ -2595,7 +2605,7 @@ extend(Input.prototype, {
             i;
 
         self.observable.destroy();
-        self._addOrRemoveListeners(removeListener);
+        self._addOrRemoveListeners(removeListener, true);
 
         self.el.$$input = null;
 
@@ -2606,39 +2616,76 @@ extend(Input.prototype, {
         }
     },
 
-    _addOrRemoveListeners: function(fn) {
+    _addOrRemoveListeners: function(fn, onlyUsed) {
 
         var self        = this,
             type        = self.inputType,
             listeners   = self.listeners,
             radio       = self.radio,
             el          = self.el,
+            used,
             i, ilen,
             j, jlen;
 
         for (i = 0, ilen = listeners.length; i < ilen; i++) {
-            if (type == "radio") {
-                for (j = 0, jlen = radio.length; j < jlen; j++) {
-                    fn(radio[j], listeners[i][0], listeners[i][1]);
+
+            used = !!listeners[i][2];
+
+            if (used == onlyUsed) {
+                if (type == "radio") {
+                    for (j = 0, jlen = radio.length; j < jlen; j++) {
+                        fn(radio[j], listeners[i][0], listeners[i][1]);
+                    }
                 }
-            }
-            else {
-                fn(el, listeners[i][0], listeners[i][1]);
+                else {
+                    fn(el, listeners[i][0], listeners[i][1]);
+                }
+                listeners[i][2] = !onlyUsed;
             }
         }
+    },
+
+    initInputChange: function() {
+
+        var self = this,
+            type = self.inputType;
+
+        if (type == "radio") {
+            self.initRadioInput();
+        }
+        else if (type == "checkbox") {
+            self.initCheckboxInput();
+        }
+        else {
+            self.initTextInput();
+        }
+
+        self._addOrRemoveListeners(addListener, false);
+
+        self.changeInitialized = true;
     },
 
     initRadioInput: function() {
 
         var self    = this,
             el      = self.el,
-            name    = el.name;
+            name    = el.name,
+            parent;
 
+        if (isAttached(el)) {
+            parent  = el.ownerDocument;
+        }
+        else {
+            parent = el;
+            while (parent.parentNode) {
+                parent = parent.parentNode;
+            }
+        }
 
-        self.radio  = select("input[name="+name+"]", el.ownerDocument);
+        self.radio  = select("input[name="+name+"]", parent);
 
         self.onRadioInputChangeDelegate = bind(self.onRadioInputChange, self);
-        self.listeners.push(["click", self.onRadioInputChangeDelegate]);
+        self.listeners.push(["click", self.onRadioInputChangeDelegate, false]);
     },
 
     initCheckboxInput: function() {
@@ -2646,7 +2693,7 @@ extend(Input.prototype, {
         var self    = this;
 
         self.onCheckboxInputChangeDelegate = bind(self.onCheckboxInputChange, self);
-        self.listeners.push(["click", self.onCheckboxInputChangeDelegate]);
+        self.listeners.push(["click", self.onCheckboxInputChangeDelegate, false]);
     },
 
     initTextInput: function() {
@@ -2671,8 +2718,8 @@ extend(Input.prototype, {
                 listener();
             };
 
-            listeners.push(["compositionstart", compositionStart]);
-            listeners.push(["compositionend", compositionEnd]);
+            listeners.push(["compositionstart", compositionStart, false]);
+            listeners.push(["compositionend", compositionEnd, false]);
         }
 
         var listener = self.onTextInputChangeDelegate = function() {
@@ -2709,17 +2756,17 @@ extend(Input.prototype, {
         // input event on backspace, delete or cut
         if (browserHasEvent('input')) {
 
-            listeners.push(["input", listener]);
+            listeners.push(["input", listener, false]);
 
         } else {
 
-            listeners.push(["keydown", keydown]);
+            listeners.push(["keydown", keydown, false]);
 
             // if user modifies input value using context menu in IE,
             // we need "paste" and "cut" events to catch it
             if (browserHasEvent('paste')) {
-                listeners.push(["paste", deferListener]);
-                listeners.push(["cut", deferListener]);
+                listeners.push(["paste", deferListener, false]);
+                listeners.push(["cut", deferListener, false]);
             }
         }
 
@@ -2727,7 +2774,7 @@ extend(Input.prototype, {
         // if user paste into input using mouse on older browser
         // or form autocomplete on newer browser, we need "change" event to catch it
 
-        listeners.push(["change", listener]);
+        listeners.push(["change", listener, false]);
     },
 
     processValue: function(val) {
@@ -2820,6 +2867,10 @@ extend(Input.prototype, {
 
 
     onChange: function(fn, context) {
+        var self = this;
+        if (!self.changeInitialized) {
+            self.initInputChange();
+        }
         this.observable.on("change", fn, context);
     },
 
@@ -2834,7 +2885,7 @@ extend(Input.prototype, {
 
         if (!self.keydownDelegate) {
             self.keydownDelegate = bind(self.keyHandler, self);
-            self.listeners.push(["keydown", self.keydownDelegate]);
+            self.listeners.push(["keydown", self.keydownDelegate, false]);
             addListener(self.el, "keydown", self.keydownDelegate);
             self.observable.createEvent("key", false, false, self.keyEventFilter);
         }
