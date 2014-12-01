@@ -1907,13 +1907,14 @@ extend(Observable.prototype, {
      *  @param {bool} autoTrigger
      *  @param {function} triggerFilter
      * }
+     * @param {object} filterContext
      * @returns {ObservableEvent}
      */
-    createEvent: function(name, returnResult, autoTrigger, triggerFilter) {
+    createEvent: function(name, returnResult, autoTrigger, triggerFilter, filterContext) {
         name = name.toLowerCase();
         var events  = this.events;
         if (!events[name]) {
-            events[name] = new Event(name, returnResult, autoTrigger, triggerFilter);
+            events[name] = new Event(name, returnResult, autoTrigger, triggerFilter, filterContext);
         }
         return events[name];
     },
@@ -2196,15 +2197,9 @@ extend(Observable.prototype, {
  * @class ObservableEvent
  * @private
  */
-var Event = function(name, returnResult, autoTrigger, triggerFilter) {
+var Event = function(name, returnResult, autoTrigger, triggerFilter, filterContext) {
 
     var self    = this;
-
-    if (typeof returnResult == "object" && returnResult !== null) {
-        triggerFilter = returnResult.triggerFilter;
-        autoTrigger = returnResult.autoTrigger;
-        returnResult = returnResult.returnResult;
-    }
 
     self.name           = name;
     self.listeners      = [];
@@ -2213,9 +2208,16 @@ var Event = function(name, returnResult, autoTrigger, triggerFilter) {
     self.uni            = '$$' + name + '_' + self.hash;
     self.suspended      = false;
     self.lid            = 0;
-    self.returnResult   = returnResult === undf ? null : returnResult; // first|last|all
-    self.autoTrigger    = autoTrigger;
-    self.triggerFilter  = triggerFilter;
+
+    if (typeof returnResult == "object" && returnResult !== null) {
+        extend(self, returnResult, true, false);
+    }
+    else {
+        self.returnResult = returnResult === undf ? null : returnResult; // first|last|all
+        self.autoTrigger = autoTrigger;
+        self.triggerFilter = triggerFilter;
+        self.filterContext = filterContext;
+    }
 };
 
 
@@ -2232,6 +2234,7 @@ extend(Event.prototype, {
     autoTrigger: null,
     lastTrigger: null,
     triggerFilter: null,
+    filterContext: null,
 
     /**
      * Get event name
@@ -2246,9 +2249,12 @@ extend(Event.prototype, {
      * @method
      */
     destroy: function() {
-        var self        = this;
-        self.listeners  = null;
-        self.map        = null;
+        var self        = this,
+            k;
+
+        for (k in self) {
+            self[k] = null;
+        }
     },
 
     /**
@@ -2481,6 +2487,7 @@ extend(Event.prototype, {
             listeners       = self.listeners,
             returnResult    = self.returnResult,
             filter          = self.triggerFilter,
+            filterContext   = self.filterContext,
             args;
 
         if (self.suspended) {
@@ -2520,7 +2527,7 @@ extend(Event.prototype, {
 
             args = self._prepareArgs(l, arguments);
 
-            if (filter && filter(l, args) === false) {
+            if (filter && filter.call(filterContext, l, args, self) === false) {
                 continue;
             }
 

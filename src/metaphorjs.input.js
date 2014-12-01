@@ -1,6 +1,6 @@
 
-var getValue = require("func/getValue.js"),
-    setValue = require("func/setValue.js"),
+var getValue = require("./func/getValue.js"),
+    setValue = require("./func/setValue.js"),
 
     bind    = require("metaphorjs/src/func/bind.js"),
     extend = require("metaphorjs/src/func/extend.js"),
