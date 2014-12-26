@@ -11,9 +11,9 @@
             "global": true,
             "target": "dist/metaphorjs.input.js",
             "files": [
-                "../metaphorjs/src/MetaphorJs.js",
+                "metaphorjs/src/MetaphorJs.js",
                 [
-                    "src/metaphorjs.input.js",
+                    "src/lib/Input.js",
                     {
                         "as": "Input"
                     }
@@ -33,26 +33,42 @@
             },
             "files": [
                 [
-                    "src/metaphorjs.input.js",
+                    "src/lib/Input.js",
                     {
                         "as": "Input"
                     }
                 ]
             ],
+            "omit": [
+                "metaphorjs-observable/src/lib/Observable.js",
+                "metaphorjs-select/src/func/select.js"
+            ],
+            "require": {
+                "metaphorjs-observable": "Observable",
+                "metaphorjs-select": "select"
+            },
             "returns": "Input"
         },
         "amd": {
             "target": "dist/metaphorjs.input.amd.js",
             "files": [
                 [
-                    "src/metaphorjs.input.js",
+                    "src/lib/Input.js",
                     {
                         "returnExports": true
                     }
                 ]
             ],
+            "omit": [
+                "metaphorjs-observable/src/lib/Observable.js",
+                "metaphorjs-select/src/func/select.js"
+            ],
             "define": {
-                "name": "metaphorjs-input"
+                "name": "metaphorjs-input",
+                "deps": {
+                    "metaphorjs-observable": "Observable",
+                    "metaphorjs-select": "select"
+                }
             }
         }
     }

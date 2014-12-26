@@ -1,8 +1,8 @@
 
-var isNull = require("../../../metaphorjs/src/func/isNull.js"),
-    isString = require("../../../metaphorjs/src/func/isString.js"),
-    trim = require("../../../metaphorjs/src/func/trim.js"),
-    undf = require("../../../metaphorjs/src/var/undf.js");
+var isNull = require("metaphorjs/src/func/isNull.js"),
+    isString = require("metaphorjs/src/func/isString.js"),
+    trim = require("metaphorjs/src/func/trim.js"),
+    undf = require("metaphorjs/src/var/undf.js");
 
 /**
  * @param {Element} elem

@@ -1,14 +1,14 @@
 
 var getValue    = require("./getValue.js"),
-    toArray     = require("../../../metaphorjs/src/func/array/toArray.js"),
-    inArray     = require("../../../metaphorjs/src/func/array/inArray.js"),
-    isArray     = require("../../../metaphorjs/src/func/isArray.js"),
-    isNumber    = require("../../../metaphorjs/src/func/isNumber.js"),
-    undf        = require("../../../metaphorjs/src/var/undf.js"),
-    isNull      = require("../../../metaphorjs/src/func/isNull.js"),
-    getAttr     = require("../../../metaphorjs/src/func/dom/getAttr.js"),
-    setAttr     = require("../../../metaphorjs/src/func/dom/setAttr.js"),
-    removeAttr  = require("../../../metaphorjs/src/func/dom/removeAttr.js");
+    toArray     = require("metaphorjs/src/func/array/toArray.js"),
+    inArray     = require("metaphorjs/src/func/array/inArray.js"),
+    isArray     = require("metaphorjs/src/func/isArray.js"),
+    isNumber    = require("metaphorjs/src/func/isNumber.js"),
+    undf        = require("metaphorjs/src/var/undf.js"),
+    isNull      = require("metaphorjs/src/func/isNull.js"),
+    getAttr     = require("metaphorjs/src/func/dom/getAttr.js"),
+    setAttr     = require("metaphorjs/src/func/dom/setAttr.js"),
+    removeAttr  = require("metaphorjs/src/func/dom/removeAttr.js");
 
 /**
  * @param {Element} el

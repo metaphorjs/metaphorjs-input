@@ -1,6 +1,6 @@
 
-var getValue = require("./func/getValue.js"),
-    setValue = require("./func/setValue.js"),
+var getValue = require("./../func/getValue.js"),
+    setValue = require("./../func/setValue.js"),
 
     bind    = require("metaphorjs/src/func/bind.js"),
     extend = require("metaphorjs/src/func/extend.js"),
@@ -10,10 +10,10 @@ var getValue = require("./func/getValue.js"),
     isAndroid = require("metaphorjs/src/func/browser/isAndroid.js"),
     browserHasEvent = require("metaphorjs/src/func/browser/browserHasEvent.js"),
     getAttr = require("metaphorjs/src/func/dom/getAttr.js"),
-    select = require("metaphorjs-select/src/metaphorjs.select.js"),
+    select = require("metaphorjs-select/src/func/select.js"),
     getNodeConfig = require("metaphorjs/src/func/dom/getNodeConfig.js"),
     normalizeEvent = require("metaphorjs/src/func/event/normalizeEvent.js"),
-    Observable = require("metaphorjs-observable/src/metaphorjs.observable.js");
+    Observable = require("metaphorjs-observable/src/lib/Observable.js");
 
 
 var Input = function(el, changeFn, changeFnContext) {
