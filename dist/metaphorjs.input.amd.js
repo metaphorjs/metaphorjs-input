@@ -1466,9 +1466,16 @@ extend(Input.prototype, {
 
         switch (this.dataType) {
             case "number":
-                val     = parseInt(val, 10);
-                if (isNaN(val)) {
-                    val = 0;
+            case "float":
+            case "double":
+                if (val === "" || isNaN(val = parseFloat(val))) {
+                    val = undf;
+                }
+                break;
+            case "int":
+            case "integer":
+                if (val === "" || isNaN(val = parseInt(val, 10))) {
+                    val = undf;
                 }
                 break;
             case "bool":
@@ -1531,6 +1538,11 @@ extend(Input.prototype, {
             node.checked    = val === true || val == self.processValue(node.value);
         }
         else {
+
+            if (val === undf) {
+                val = "";
+            }
+
             setValue(self.el, val);
         }
     },
