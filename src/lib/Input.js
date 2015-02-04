@@ -351,7 +351,7 @@ extend(Input.prototype, {
     },
 
 
-    onKey: function(key, fn, context) {
+    onKey: function(key, fn, context, args) {
 
         var self = this;
 
@@ -363,7 +363,8 @@ extend(Input.prototype, {
         }
 
         self.observable.on("key", fn, context, {
-            key: key
+            key: key,
+            prepend: args
         });
     },
 
