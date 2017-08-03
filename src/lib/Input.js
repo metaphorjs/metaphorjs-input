@@ -311,6 +311,8 @@ extend(Input.prototype, {
 
             setValue(self.el, val);
         }
+
+        self.triggerChange();
     },
 
     getValue: function() {
@@ -399,6 +401,17 @@ extend(Input.prototype, {
             self    = this;
 
         self.observable.trigger("key", e);
+    },
+
+    triggerChange: function() {
+        if ("createEvent" in document) {
+            var evt = document.createEvent("HTMLEvents");
+            evt.initEvent("change", false, true);
+            this.el.dispatchEvent(evt);
+        }
+        else {
+            this.el.fireEvent("onchange");
+        }
     }
 
 
