@@ -347,7 +347,7 @@ var setValue = function() {
                     removeAttr(option, "selected");
                 }
 
-                if (!selected && !isNull(getAttr(option, "mjs-default-option"))) {
+                if (!selected && !isNull(getAttr(option, "default-option"))) {
                     setIndex = i;
                 }
             }
@@ -1284,8 +1284,8 @@ function getNodeConfig(node, scope, expr) {
 
     cfg = {};
 
-    if (expr || (expr = getAttr(node, "mjs-config")) !== null) {
-        removeAttr(node, "mjs-config");
+    if (expr || (expr = getAttr(node, "config")) !== null) {
+        removeAttr(node, "config");
         config = expr ? createGetter(expr)(scope || {}) : {};
         for (i in config){
             cfg[i] = config[i];

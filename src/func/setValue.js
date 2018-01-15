@@ -39,7 +39,7 @@ module.exports = function() {
                     removeAttr(option, "selected");
                 }
 
-                if (!selected && !isNull(getAttr(option, "mjs-default-option"))) {
+                if (!selected && !isNull(getAttr(option, "default-option"))) {
                     setIndex = i;
                 }
             }
