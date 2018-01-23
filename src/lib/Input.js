@@ -11,13 +11,12 @@ var getValue = require("./../func/getValue.js"),
     browserHasEvent = require("metaphorjs/src/func/browser/browserHasEvent.js"),
     getAttr = require("metaphorjs/src/func/dom/getAttr.js"),
     select = require("metaphorjs-select/src/func/select.js"),
-    getNodeConfig = require("metaphorjs/src/func/dom/getNodeConfig.js"),
     normalizeEvent = require("metaphorjs/src/func/event/normalizeEvent.js"),
     Observable = require("metaphorjs-observable/src/lib/Observable.js"),
     undf = require("metaphorjs/src/var/undf.js");
 
 
-var Input = function(el, changeFn, changeFnContext) {
+var Input = function(el, changeFn, changeFnContext, cfg) {
 
     if (el.$$input) {
         if (changeFn) {
@@ -26,13 +25,14 @@ var Input = function(el, changeFn, changeFnContext) {
         return el.$$input;
     }
 
-    var self    = this,
-        cfg     = getNodeConfig(el);
+    var self    = this;
+
+    cfg = cfg || {};
 
     self.observable     = new Observable;
     self.el             = el;
     self.inputType      = el.type.toLowerCase();
-    self.dataType       = cfg.type || self.inputType;
+    self.dataType       = cfg.type || getAttr(el, "data-type") || self.inputType;
     self.listeners      = [];
 
     if (changeFn) {
@@ -82,8 +82,8 @@ extend(Input.prototype, {
 
             used = !!listeners[i][2];
 
-            if (used == onlyUsed) {
-                if (type == "radio") {
+            if (used === onlyUsed) {
+                if (type === "radio") {
                     for (j = 0, jlen = radio.length; j < jlen; j++) {
                         fn(radio[j], listeners[i][0], listeners[i][1]);
                     }
@@ -101,10 +101,10 @@ extend(Input.prototype, {
         var self = this,
             type = self.inputType;
 
-        if (type == "radio") {
+        if (type === "radio") {
             self.initRadioInput();
         }
-        else if (type == "checkbox") {
+        else if (type === "checkbox") {
             self.initCheckboxInput();
         }
         else {
@@ -173,11 +173,11 @@ extend(Input.prototype, {
             listeners.push(["compositionend", compositionEnd, false]);
         }
 
-        var listener = self.onTextInputChangeDelegate = function() {
+        var listener = self.onTextInputChangeDelegate = function(ev) {
             if (composing) {
                 return;
             }
-            self.onTextInputChange();
+            self.onTextInputChange(ev);
         };
 
         var deferListener = function(ev) {
@@ -254,7 +254,7 @@ extend(Input.prototype, {
         return val;
     },
 
-    onTextInputChange: function() {
+    onTextInputChange: function(ev) {
 
         var self    = this,
             val     = self.getValue();
@@ -291,7 +291,7 @@ extend(Input.prototype, {
 
         val = self.processValue(val);
 
-        if (type == "radio") {
+        if (type === "radio") {
 
             radio = self.radio;
 
@@ -299,7 +299,7 @@ extend(Input.prototype, {
                 radio[i].checked = self.processValue(radio[i].value) == val;
             }
         }
-        else if (type == "checkbox") {
+        else if (type === "checkbox") {
             var node        = self.el;
             node.checked    = val === true || val == self.processValue(node.value);
         }
@@ -322,7 +322,7 @@ extend(Input.prototype, {
             radio,
             i, l;
 
-        if (type == "radio") {
+        if (type === "radio") {
             radio = self.radio;
             for (i = 0, l = radio.length; i < l; i++) {
                 if (radio[i].checked) {
@@ -331,7 +331,7 @@ extend(Input.prototype, {
             }
             return null;
         }
-        else if (type == "checkbox") {
+        else if (type === "checkbox") {
             return self.processValue(self.el.checked ? (getAttr(self.el, "value") || true) : false);
         }
         else {
@@ -381,17 +381,17 @@ extend(Input.prototype, {
         var key = l.key,
             e = args[0];
 
-        if (typeof key != "object") {
-            return key == e.keyCode;
+        if (typeof key !== "object") {
+            return key === e.keyCode;
         }
         else {
-            if (key.ctrlKey !== undf && key.ctrlKey != e.ctrlKey) {
+            if (key.ctrlKey !== undf && key.ctrlKey !== e.ctrlKey) {
                 return false;
             }
-            if (key.shiftKey !== undf && key.shiftKey != e.shiftKey) {
+            if (key.shiftKey !== undf && key.shiftKey !== e.shiftKey) {
                 return false;
             }
-            return !(key.keyCode !== undf && key.keyCode != e.keyCode);
+            return !(key.keyCode !== undf && key.keyCode !== e.keyCode);
         }
     },
 

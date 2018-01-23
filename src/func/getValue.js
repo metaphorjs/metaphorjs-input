@@ -17,7 +17,7 @@ module.exports = function(){
         option: function(elem) {
             var val = elem.getAttribute("value") || elem.value;
 
-            return val != undf ?
+            return val !== undf ?
                    val :
                    trim( elem.innerText || elem.textContent );
         },
