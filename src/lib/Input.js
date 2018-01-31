@@ -143,8 +143,12 @@ extend(Input.prototype, {
 
         var self    = this;
 
+        self.clicked = false;
+
         self.onCheckboxInputChangeDelegate = bind(self.onCheckboxInputChange, self);
-        self.listeners.push(["click", self.onCheckboxInputChangeDelegate, false]);
+        self.onCheckboxInputClickDelegate = bind(self.onCheckboxInputClick, self);
+        self.listeners.push(["click", self.onCheckboxInputClickDelegate, false]);
+        self.listeners.push(["change", self.onCheckboxInputChangeDelegate, false]);
     },
 
     initTextInput: function() {
@@ -262,14 +266,26 @@ extend(Input.prototype, {
         self.observable.trigger("change", self.processValue(val));
     },
 
-    onCheckboxInputChange: function() {
 
+    _checkboxChange: function() {
         var self    = this,
             node    = self.el;
 
         self.observable.trigger("change", self.processValue(
             node.checked ? (getAttr(node, "value") || true) : false)
         );
+    },
+
+    onCheckboxInputChange: function() {
+        if (!this.clicked) {
+            this._checkboxChange();
+        }
+        this.clicked = false;
+    },
+
+    onCheckboxInputClick: function() {
+        this._checkboxChange();
+        this.clicked = true;
     },
 
     onRadioInputChange: function(e) {
