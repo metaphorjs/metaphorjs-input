@@ -434,9 +434,15 @@ extend(Input.prototype, {
 }, true, false);
 
 
-Input.get = function(node) {
+Input.get = function(node, scope) {
     if (node.$$input) {
         return node.$$input;
+    }
+    if (scope && !node.type) {
+        var cmp = scope.$app.getParentCmp(node, true);
+        if (cmp && cmp.getInputInterface) {
+            return cmp.getInputInterface();
+        }
     }
     return new Input(node);
 };
