@@ -2,7 +2,6 @@
     "name": "metaphorjs-input",
     "version": "0.1.7",
     "description": "MetaphorJs input field wrapper",
-    "main": "dist/metaphorjs.input.npm.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },

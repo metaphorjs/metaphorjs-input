@@ -5,7 +5,6 @@
         "kuindji <kuindji@gmail.com>"
     ],
     "description": "MetaphorJs input field wrapper",
-    "main": "dist/metaphorjs.input.amd.min.js",
     "moduleType": [
         "amd"
     ],
