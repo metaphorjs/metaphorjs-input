@@ -50,12 +50,12 @@ extend(Input.prototype, {
     keydownDelegate: null,
     changeInitialized: false,
 
-    destroy: function() {
+    onDestroy: function() {
 
         var self        = this,
             i;
 
-        self.observable.destroy();
+        self.observable.$destroy();
         self._addOrRemoveListeners(removeListener, true);
 
         self.el.$$input = null;
@@ -377,7 +377,10 @@ extend(Input.prototype, {
             self.keydownDelegate = bind(self.keyHandler, self);
             self.listeners.push(["keydown", self.keydownDelegate, false]);
             addListener(self.el, "keydown", self.keydownDelegate);
-            self.observable.createEvent("key", false, false, self.keyEventFilter);
+            self.observable.createEvent("key", {
+                returnResult: false,
+                triggerFilter: self.keyEventFilter
+            });
         }
 
         self.observable.on("key", fn, context, {
